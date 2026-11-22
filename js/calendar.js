@@ -14,12 +14,12 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // ---------- dates ----------
 export const keyToDate = (key) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
-const isKey = (k) => /^\d{4}-\d{2}-\d{2}$/.test(k || '') && !isNaN(keyToDate(k));
-const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate() + n); return d; };
-const mondayOf = (date) => addDays(date, -((date.getDay() + 6) % 7));
-const todayKey = () => dayKey(Date.now());
-const isFuture = (key) => key > todayKey();
-const href = (view, key) => `#/calendar/${view}/${key}`;
+export const isKey = (k) => /^\d{4}-\d{2}-\d{2}$/.test(k || '') && !isNaN(keyToDate(k));
+export const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate() + n); return d; };
+export const mondayOf = (date) => addDays(date, -((date.getDay() + 6) % 7));
+export const todayKey = () => dayKey(Date.now());
+export const isFuture = (key) => key > todayKey();
+export const href = (view, key, habit = 'water') => `#/calendar/${habit === 'run' ? 'run/' : ''}${view}/${key}`;
 
 // Totals for every day, worked out once per page draw
 function totalsByDay() {
@@ -29,35 +29,39 @@ function totalsByDay() {
 }
 
 // One wave strip, reused for every fill
-const WAVE = (fill) =>
+export const WAVE = (fill) =>
   `<svg class="cwave" aria-hidden="true" viewBox="0 0 96 8" preserveAspectRatio="none"><path d="M0 4 Q6 0 12 4 T24 4 T36 4 T48 4 T60 4 T72 4 T84 4 T96 4 V8 H0Z" style="fill:${fill}"/></svg>`;
 
 // =========================================================
 // Page shell: title, Day/Week/Month switch, ‹ period ›
 // =========================================================
-function shell(view, key, { label, right, prevKey, nextKey }) {
+export function shell(view, key, { label, right, prevKey, nextKey, habit = 'water', legend }) {
+  const h = (v, k) => href(v, k, habit);
   const tabs = ['day', 'week', 'month'];
   return `
     <header class="head">
-      <div><div class="date">Water</div><h1>Calendar</h1></div>
-      <span class="cal-hint">${view === 'day' ? 'Pinch in for the week' : 'Tap a day to open it'}</span>
+      <div><div class="date">${habit === 'run' ? 'Running' : 'Water'}</div><h1>Calendar</h1></div>
+      <div class="habit-switch" role="tablist" aria-label="Habit">
+        <a href="${href(view, key, 'water')}" role="tab" aria-selected="${habit === 'water'}" class="${habit === 'water' ? 'on' : ''}" data-habit="water">Water</a>
+        <a href="${href(view, key, 'run')}" role="tab" aria-selected="${habit === 'run'}" class="${habit === 'run' ? 'on run' : ''}" data-habit="run">Running</a>
+      </div>
     </header>
-    <div class="zoom" role="tablist" aria-label="Zoom">
-      ${tabs.map((v) => `<a href="${href(v, key)}" role="tab" aria-selected="${v === view}" class="${v === view ? 'on' : ''}" data-zoom="${v}">${v[0].toUpperCase() + v.slice(1)}</a>`).join('')}
+    <div class="zoom ${habit === 'run' ? 'run' : ''}" role="tablist" aria-label="Zoom">
+      ${tabs.map((v) => `<a href="${h(v, key)}" role="tab" aria-selected="${v === view}" class="${v === view ? 'on' : ''}" data-zoom="${v}">${v[0].toUpperCase() + v.slice(1)}</a>`).join('')}
     </div>
     <div class="period">
       <div class="period-nav">
-        <a class="icon-btn ghost" href="${href(view, prevKey)}" aria-label="Previous ${view}" data-step="prev">${icons.back}</a>
+        <a class="icon-btn ghost" href="${h(view, prevKey)}" aria-label="Previous ${view}" data-step="prev">${icons.back}</a>
         <span class="period-label" id="periodLabel">${esc(label)}</span>
-        ${nextKey ? `<a class="icon-btn ghost flip" href="${href(view, nextKey)}" aria-label="Next ${view}" data-step="next">${icons.back}</a>`
+        ${nextKey ? `<a class="icon-btn ghost flip" href="${h(view, nextKey)}" aria-label="Next ${view}" data-step="next">${icons.back}</a>`
                   : `<span class="icon-btn ghost flip disabled" aria-hidden="true">${icons.back}</span>`}
       </div>
       <span class="period-right">${esc(right)}</span>
     </div>
     <div class="cal-body" id="calBody"></div>
     <div class="legend">
-      <span><i style="background:var(--water)"></i>Up to goal</span>
-      <span><i style="background:var(--bonus)"></i>Extra</span>
+      ${legend || `<span><i style="background:var(--water)"></i>Up to goal</span>
+      <span><i style="background:var(--bonus)"></i>Extra</span>`}
       <span class="legend-tip">Pinch to zoom</span>
     </div>`;
 }
@@ -252,14 +256,14 @@ export function mountCalendar(view, params = []) {
 
 // Two fingers apart = zoom in (month → week → day); together = zoom out.
 // On a laptop, a trackpad pinch (ctrl + wheel) does the same.
-function enablePinch(el, kind, key) {
+export function enablePinch(el, kind, key, habit = 'water') {
   let startDist = null, done = false;
   const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
   const zoom = (dir) => {
     const i = VIEWS.indexOf(kind) + dir;              // -1 = more detail
     if (i < 0 || i >= VIEWS.length || done) return;
     done = true;
-    location.hash = href(VIEWS[i], key).slice(1);
+    location.hash = href(VIEWS[i], key, habit).slice(1);
   };
   const onStart = (e) => { if (e.touches.length === 2) { startDist = dist(e.touches); done = false; } };
   const onMove = (e) => {

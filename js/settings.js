@@ -1,7 +1,7 @@
 // =========================================================
 // Settings sheet, plus Trash and Backup sheets opened from it.
 // =========================================================
-import { state, setSetting, setGoal, restoreDrink, reloadAll } from './state.js';
+import { state, setSetting, setGoal, setRunGoal, restoreItem, reloadAll } from './state.js';
 import { applyTheme, THEMES } from './themes.js';
 import * as db from './db.js';
 import { $, esc, icons, fmtMl, hhmm, openSheet, closeSheet, showToast } from './ui.js';
@@ -24,9 +24,12 @@ export function openSettings() {
     <div class="field"><label for="goalIn">Daily goal (L)</label><input id="goalIn" type="number" inputmode="decimal" min="0.5" max="6" step="0.1" value="${s.goal / 1000}"></div>
     <div class="field"><label for="bonusIn">Bonus bottle (L)</label><input id="bonusIn" type="number" inputmode="decimal" min="0.25" max="3" step="0.25" value="${s.bonus / 1000}"></div>
     <p class="hint">A new goal counts from today. Past days keep the goal they had.</p>
+    <div class="field"><label for="runGoalIn">Running goal (km / week)</label><input id="runGoalIn" type="number" inputmode="decimal" min="1" max="200" step="1" value="${s.runGoal}"></div>
+    <div class="field"><label for="runBonusIn">Bonus lap (km)</label><input id="runBonusIn" type="number" inputmode="decimal" min="1" max="100" step="1" value="${s.runBonus}"></div>
+    <p class="hint">A new running goal counts from this week. Past weeks keep theirs.</p>
     <label class="check"><input type="checkbox" id="askIn" ${s.ask ? 'checked' : ''}><span><b>Ask before adding a cup</b><small>Shows "Add 330 ml?" so a mis-tap doesn't count</small></span></label>
     <div class="group"><span>Cup buttons — tap one to remove it</span><div class="pills" id="cupPills">${cupPills}</div></div>
-    <button class="row-btn" id="openTrash">Trash <span>Deleted drinks, kept 30 days ›</span></button>
+    <button class="row-btn" id="openTrash">Trash <span>Deleted drinks and runs, kept 30 days ›</span></button>
     <button class="row-btn" id="openBackup">Backup <span>Save or load your data ›</span></button>
     <p class="foot-note" style="margin:0">Version ${esc(APP_VERSION)} · Your data stays on this phone.</p>`, {
     label: 'Settings',
@@ -40,6 +43,14 @@ export function openSettings() {
         if (v >= 250 && v <= 3000) setGoal({ bonus: v }); else { $('bonusIn').value = s.bonus / 1000; showToast('Pick a bonus between 0.25 and 3 L'); }
       };
       $('askIn').onchange = () => setSetting('ask', $('askIn').checked);
+      $('runGoalIn').onchange = () => {
+        const v = Math.round(Number($('runGoalIn').value) * 10) / 10;
+        if (v >= 1 && v <= 200) setRunGoal({ goal: v }); else { $('runGoalIn').value = s.runGoal; showToast('Pick a goal between 1 and 200 km'); }
+      };
+      $('runBonusIn').onchange = () => {
+        const v = Math.round(Number($('runBonusIn').value) * 10) / 10;
+        if (v >= 1 && v <= 100) setRunGoal({ bonus: v }); else { $('runBonusIn').value = s.runBonus; showToast('Pick a bonus lap between 1 and 100 km'); }
+      };
       $('themePick').onclick = (ev) => {
         const b = ev.target.closest('[data-theme-pick]');
         if (!b) return;
@@ -68,10 +79,11 @@ export function openSettings() {
 async function openTrash() {
   const items = (await db.trashList()).sort((a, b) => b.deletedAt - a.deletedAt);
   const daysLeft = (t) => Math.max(0, 30 - Math.floor((Date.now() - t.deletedAt) / 864e5));
+  const when = (t) => `${new Date(t.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${hhmm(t.ts)}`;
   const rows = items.map((t) => `
     <li class="entry">
-      <div class="ico">${icons.cup(20)}</div>
-      <div class="what"><b>${fmtMl(t.ml)}</b><span>${new Date(t.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${hhmm(t.ts)} · ${daysLeft(t)} days left</span></div>
+      <div class="ico ${t.kind === 'run' ? 'run' : ''}">${t.kind === 'run' ? icons.run : icons.cup(20)}</div>
+      <div class="what"><b>${t.kind === 'run' ? `${Number(t.km).toFixed(1)} km run` : fmtMl(t.ml)}</b><span>${when(t)} · ${daysLeft(t)} days left</span></div>
       <button class="restore" data-restore="${t.id}">Restore</button>
     </li>`).join('');
   openSheet(`
@@ -83,9 +95,9 @@ async function openTrash() {
       $('trashList').onclick = async (ev) => {
         const b = ev.target.closest('[data-restore]');
         if (!b) return;
-        const t = await restoreDrink(b.dataset.restore);
+        const t = await restoreItem(b.dataset.restore);
         b.closest('li').remove();
-        if (t) showToast(`Restored ${fmtMl(t.ml)}`);
+        if (t) showToast(t.kind === 'run' ? `Restored the ${Number(t.km).toFixed(1)} km run` : `Restored ${fmtMl(t.ml)}`);
         if (!$('trashList').children.length) $('trashList').innerHTML = '<li class="empty">Trash is empty.</li>';
       };
       const empty = $('emptyTrash');

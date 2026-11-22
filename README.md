@@ -29,10 +29,12 @@ you upload is exactly what runs on the phone.
 | Data while running | `js/state.js` | Settings and drinks in memory, kept in step with the database; goal history (`goalFor(day)`) |
 | Water | `js/water.js` | Bottles, 24-hour branch line, cups, confirm, custom amount, pour animation, log page |
 | Themes | `js/themes.js` | The theme list and switching; the colours are in `css/style.css` |
+| Running | `js/running.js` | The Running page: weekly track, week strip, log / change a run (outdoor or treadmill with incline) |
+| Running calendar | `js/runcal.js` | Month (with week rings), Week and Day for runs; addresses like `#/calendar/run/week/2026-11-17` |
 | Calendar | `js/calendar.js` | Month, Week and Day views, Day/Week/Month switch, pinch to zoom; addresses like `#/calendar/week/2026-11-17` |
 | Settings | `js/settings.js` | Goal, bonus size, "ask before adding", cup buttons, Trash, Backup |
 | Backup | `js/backup.js` | Save all data to a file and load it back |
-| Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, trash, settings |
+| Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, runs, trash, settings |
 | Version | `js/version.js` | Shown in Settings; must match `sw.js` |
 | Look | `css/style.css` | All styles, grouped by part |
 | Offline | `sw.js` | Saves the app files on the phone; its version tells phones to update |
@@ -77,6 +79,16 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 
 ## Updates
 
+### Update 5 · tracker-v5 — Running
+- **Running page:** the week's goal (15 km by default) is a running track that fills lap by lap. A white runner dot runs to the new total when you save a run, small markers show where each run ended, and past the goal a lighter **bonus lap** (5 km) fills on the inside. Below: the week's days as small orange pills (a slope mark for treadmill days), **Log a run**, and **Same as last** to repeat your usual run.
+- **Log a run:** Outdoor or Treadmill; distance (or quick 3/5/8/10/21.1 km); time as 28:40, 1:02:30 or just minutes; for treadmill, the incline in % (0–15, quick 0/1/2/4/6). Pace, speed and metres climbed are worked out as you type. Pick another date and time for runs you forgot. Times in the future are refused.
+- **Change or delete a run** by tapping it in the running calendar's Day view. Deleted runs go to the Trash (30 days), which now holds drinks and runs.
+- **Calendar:** a Water / Running switch. Running Month fills each day orange by distance (full at goal ÷ 2.5, e.g. 6 km) with a slope mark for treadmill runs, plus a column of week rings (inner ring = bonus). Week shows 7 cards and a summary (goal %, time, bonus or climbed). Day lists the runs and lets you add one.
+- **Settings:** weekly running goal and bonus lap; like water, a new goal counts from this week and past weeks keep theirs.
+- **Themes:** each theme has its own running colour.
+- **Saved data:** the database goes to version 2 (adds runs). Phones on the old version upgrade automatically and keep everything; backups include runs.
+- Tests: t09 updated; new t19 (log a run), t20 (goal, bonus lap, edit, delete, Trash), t21 (running calendar), t22 (database upgrade + Running page fits the screen).
+
 ### Update 4 · tracker-v4 — Fits the screen
 - The Today page now fits the phone's screen without scrolling. The bottle and the 24-hour line grow or shrink with the screen height (between 170 and 306 px), and on shorter screens the cups, numbers and spacing get a little more compact.
 - Twigs on the 24-hour line are placed by percentage, so they stay at the right time at any size; the pour animation measures the bottle instead of assuming its size.
@@ -109,4 +121,4 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 - Tests t01–t11.
 
 ## Next
-- Update 5: Running — mockups first, then code.
+- Ideas: notes or "how it felt" on runs; Stats across water and running.

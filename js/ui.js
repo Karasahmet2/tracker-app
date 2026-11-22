@@ -22,6 +22,9 @@ export const uid = () => Date.now().toString(36) + Math.random().toString(36).sl
 export const icons = {
   cup: (size = 22, color = 'var(--water-light)') =>
     `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" style="stroke:${color}" stroke-width="2" stroke-linejoin="round"><path d="M5 4h14l-1.6 16.2a1 1 0 0 1-1 .8H7.6a1 1 0 0 1-1-.8z"/><path d="M6 10h12" stroke-opacity="0.5"/></svg>`,
+  run: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="m6 21 3-6 3 2v4M8 11l3-3 3 3 3 1M11 8l-1 5"/></svg>`,
+  treadmill: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M5 19 19 12"/><path d="M15 8h3l2 4"/></svg>`,
+  slope: `<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="3" stroke-linecap="round"><path d="M3 18 L21 8"/></svg>`,
   plus: `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
   close: `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
   back: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,

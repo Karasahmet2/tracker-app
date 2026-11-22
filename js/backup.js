@@ -29,6 +29,8 @@ export async function loadBackup(file) {
   const clean = {
     drinks: data.drinks.filter((d) => d && typeof d.id === 'string' && Number.isFinite(d.ts) && Number.isFinite(d.ml))
       .map((d) => ({ id: d.id, ts: d.ts, ml: d.ml })),
+    runs: (data.runs || []).filter((r) => r && typeof r.id === 'string' && Number.isFinite(r.ts) && Number.isFinite(r.km))
+      .map((r) => ({ id: r.id, ts: r.ts, km: r.km, sec: Number(r.sec) || 0, where: r.where === 'treadmill' ? 'treadmill' : 'outdoor', incline: Number(r.incline) || 0 })),
     trash: (data.trash || []).filter((t) => t && typeof t.id === 'string' && Number.isFinite(t.ts)),
     settings: data.settings && typeof data.settings === 'object' ? data.settings : {}
   };

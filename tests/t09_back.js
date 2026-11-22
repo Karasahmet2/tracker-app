@@ -37,7 +37,8 @@ module.exports = async () => {
     await page.waitForSelector('.overlay', { state: 'detached' });
 
     await page.locator('#nav a[data-tab="running"]').click();
-    assert((await text(page, '.soon h1')) === 'Running', 'running page');
+    await page.waitForSelector('#track');
+    assert((await text(page, '.head h1')) === 'Running', 'running page');
     eq(errors.length, 0, 'no errors: ' + errors.join(' | '));
   } finally { await close(); }
 };

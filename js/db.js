@@ -4,7 +4,10 @@
 //
 // Stores
 //   drinks   { id, ts, ml }                 one row per drink
-//   trash    { id, ts, ml, kind, deletedAt } deleted items, kept 30 days
+//   runs     { id, ts, km, sec, where, incline }   one row per run (v2)
+//              where: 'outdoor' | 'treadmill'; incline in % (treadmill only)
+//   trash    { ...item, kind, deletedAt }    deleted drinks/runs, kept 30 days
+//              kind: 'drink' | 'run'
 //   settings { key, value }
 //
 // Changing the layout? Bump DB_VERSION and add a step in migrate()
@@ -12,7 +15,7 @@
 // =========================================================
 
 const DB_NAME = 'tracker';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 export const TRASH_DAYS = 30;
 
 let dbPromise = null;
@@ -26,7 +29,12 @@ function migrate(db, oldVersion) {
       db.createObjectStore('trash', { keyPath: 'id' });
       db.createObjectStore('settings', { keyPath: 'key' });
     }
-    // case 1: future migrations go here
+    // falls through
+    case 1: {                                   // Update 5: running
+      const runs = db.createObjectStore('runs', { keyPath: 'id' });
+      runs.createIndex('ts', 'ts');
+    }
+    // case 2: future migrations go here
   }
 }
 
@@ -64,29 +72,41 @@ export async function putDrink(d) {
   return done((await store('drinks', 'readwrite')).put(d));
 }
 
-// Move a drink to the Trash (one transaction, so it can't half-happen)
-export async function trashDrink(id) {
-  const db = await open();
-  const tx = db.transaction(['drinks', 'trash'], 'readwrite');
-  const drinks = tx.objectStore('drinks');
-  const d = await done(drinks.get(id));
-  if (d) {
-    drinks.delete(id);
-    tx.objectStore('trash').put({ ...d, kind: 'drink', deletedAt: Date.now() });
-  }
-  await finished(tx);
-  return d || null;
+// ---------- runs (Update 5) ----------
+export async function allRuns() {
+  return done((await store('runs')).getAll());
+}
+export async function putRun(r) {
+  return done((await store('runs', 'readwrite')).put(r));
+}
+export async function removeRun(id) {
+  return done((await store('runs', 'readwrite')).delete(id));
 }
 
-export async function restoreDrink(id) {
+// Move any item to the Trash / back. kind 'drink' → drinks store, 'run' → runs store.
+const STORE_OF = { drink: 'drinks', run: 'runs' };
+export async function trashItem(kind, id) {
   const db = await open();
-  const tx = db.transaction(['drinks', 'trash'], 'readwrite');
+  const name = STORE_OF[kind];
+  const tx = db.transaction([name, 'trash'], 'readwrite');
+  const s = tx.objectStore(name);
+  const item = await done(s.get(id));
+  if (item) {
+    s.delete(id);
+    tx.objectStore('trash').put({ ...item, kind, deletedAt: Date.now() });
+  }
+  await finished(tx);
+  return item || null;
+}
+export async function restoreItem(id) {
+  const db = await open();
+  const tx = db.transaction(['drinks', 'runs', 'trash'], 'readwrite');
   const trash = tx.objectStore('trash');
   const t = await done(trash.get(id));
   if (t) {
     trash.delete(id);
-    const { kind, deletedAt, ...d } = t;
-    tx.objectStore('drinks').put(d);
+    const { kind, deletedAt, ...item } = t;
+    tx.objectStore(STORE_OF[kind] || 'drinks').put(item);
   }
   await finished(tx);
   return t || null;
@@ -120,18 +140,27 @@ export async function setSetting(key, value) {
   return done((await store('settings', 'readwrite')).put({ key, value }));
 }
 
+// Several settings in one go, so they can't half-save
+export async function setSettings(obj) {
+  const db = await open();
+  const tx = db.transaction('settings', 'readwrite');
+  Object.entries(obj).forEach(([key, value]) => tx.objectStore('settings').put({ key, value }));
+  await finished(tx);
+}
+
 // ---------- backup ----------
 export async function exportAll() {
-  return { drinks: await allDrinks(), trash: await trashList(), settings: await getSettings() };
+  return { drinks: await allDrinks(), runs: await allRuns(), trash: await trashList(), settings: await getSettings() };
 }
 
 // Replaces everything with the backup's contents
 export async function importAll(data) {
   const db = await open();
-  const tx = db.transaction(['drinks', 'trash', 'settings'], 'readwrite');
-  const drinks = tx.objectStore('drinks'), trash = tx.objectStore('trash'), settings = tx.objectStore('settings');
-  drinks.clear(); trash.clear(); settings.clear();
+  const tx = db.transaction(['drinks', 'runs', 'trash', 'settings'], 'readwrite');
+  const drinks = tx.objectStore('drinks'), runs = tx.objectStore('runs'), trash = tx.objectStore('trash'), settings = tx.objectStore('settings');
+  drinks.clear(); runs.clear(); trash.clear(); settings.clear();
   (data.drinks || []).forEach((d) => drinks.put(d));
+  (data.runs || []).forEach((r) => runs.put(r));
   (data.trash || []).forEach((t) => trash.put(t));
   Object.entries(data.settings || {}).forEach(([key, value]) => settings.put({ key, value }));
   await finished(tx);

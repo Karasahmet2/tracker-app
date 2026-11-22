@@ -9,16 +9,20 @@ import { load, onChange, state } from './state.js';
 import { $, dayKey, handleBack, isSheetOpen, showToast } from './ui.js';
 import { mountToday, mountLog } from './water.js';
 import { mountCalendar } from './calendar.js';
+import { mountRunning } from './running.js';
+import { mountRunCalendar } from './runcal.js';
 import { applyTheme } from './themes.js';
 
 const routes = {
   '/water': { tab: 'water', mount: mountToday },
   '/water/log': { tab: 'water', mount: mountLog },
-  '/running': { tab: 'running', mount: (v) => comingSoon(v, 'Running', 'Log your runs and see distance and pace. This is the next update.') },
-  '/calendar': { tab: 'calendar', mount: mountCalendar }      // takes /view/date after it
+  '/running': { tab: 'running', mount: mountRunning },
+  '/calendar': { tab: 'calendar', mount: mountCalendar },     // takes /view/date after it
+  '/calendar/run': { tab: 'calendar', mount: mountRunCalendar, habit: 'run' }
 };
 
-let page = null;          // { update, destroy } of the page on screen
+let page = null;
+let lastHabit = 'water';          // { update, destroy } of the page on screen
 let lastDay = dayKey(Date.now());
 
 function comingSoon(view, title, text) {
@@ -41,6 +45,11 @@ function show() {
   const { route, params } = resolve();
   if (page) page.destroy();
   page = route.mount($('view'), params);
+  // the Calendar tab opens the habit you were last looking at
+  if (route.tab === 'water') lastHabit = 'water';
+  if (route.tab === 'running' || route.habit === 'run') lastHabit = 'run';
+  if (route.tab === 'calendar' && !route.habit) lastHabit = 'water';
+  document.querySelector('#nav [data-tab="calendar"]').setAttribute('href', lastHabit === 'run' ? '#/calendar/run' : '#/calendar');
   document.querySelectorAll('#nav [data-tab]').forEach((a) => {
     const on = a.dataset.tab === route.tab;
     a.classList.toggle('active', on);
