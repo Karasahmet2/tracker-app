@@ -1,0 +1,12 @@
+{
+  "name": "tracker-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Water and running tracker. Plain HTML/CSS/JS, no build step.",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}
