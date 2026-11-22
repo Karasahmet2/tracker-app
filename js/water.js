@@ -9,7 +9,8 @@ import {
 } from './ui.js';
 import { openSettings } from './settings.js';
 
-const H = 306;                // px: the 24-hour line and big bottle are this tall
+// The 24-hour line is as tall as the screen allows, so twigs are placed in % of it.
+const pctOfDay = (ts) => (minutesOf(ts) / 1440 * 100).toFixed(2) + '%';
 const POUR_MS = 1900;         // whole pour animation
 const COMMIT_MS = 450;        // when the drink is saved during the pour
 
@@ -125,16 +126,15 @@ export function timelineHTML(list, { now = true, growId = null, key } = {}) {
     const before = run; run += d.ml;
     const color = before >= goal ? 'var(--bonus)' : 'var(--water)';
     const w = Math.max(8, Math.round(Math.min(d.ml, 1500) / 1000 * 36));
-    const top = (minutesOf(d.ts) / 1440 * H).toFixed(1);
-    return `<div class="branch" data-branch="${d.id}" style="top:${top}px"><div class="twig ${d.id === growId ? 'grow' : ''}" style="width:${w}px;background:${color}"><div class="leaf"></div></div></div>`;
+    return `<div class="branch" data-branch="${d.id}" style="top:${pctOfDay(d.ts)}"><div class="twig ${d.id === growId ? 'grow' : ''}" style="width:${w}px;background:${color}"><div class="leaf"></div></div></div>`;
   }).join('');
   const hours = [0, 6, 12, 18, 24].map((h) =>
-    `<div class="hour" style="top:${(h / 24 * H).toFixed(1)}px"><span>${pad(h)}</span><span></span></div>`).join('');
-  const nowTop = (minutesOf(Date.now()) / 1440 * H).toFixed(1);
+    `<div class="hour" style="top:${(h / 24 * 100).toFixed(2)}%"><span>${pad(h)}</span><span></span></div>`).join('');
+  const nowTop = pctOfDay(Date.now());
   return `<div class="axis"></div>` +
-    (now ? `<div class="past" style="height:${nowTop}px"></div>` : `<div class="past" style="height:${H}px"></div>`) +
+    `<div class="past" style="height:${now ? nowTop : '100%'}"></div>` +
     hours + branches +
-    (now ? `<div class="now-dot" style="top:${nowTop}px"></div><span class="now-label" style="top:${nowTop}px">now</span>` : '');
+    (now ? `<div class="now-dot" style="top:${nowTop}"></div><span class="now-label" style="top:${nowTop}">now</span>` : '');
 }
 
 function drawTimeline(list = drinksOn()) {
@@ -240,7 +240,8 @@ function playPour(before, ml) {
   if (!layer) return;
   layer.innerHTML = '';
   const goal = goalFor().goal;
-  const surface = 38 + 268 * (1 - Math.min(before, goal) / goal);   // water line inside the big bottle
+  const body = $('bigWrap').querySelector('.body');
+  const surface = body.offsetTop + body.clientHeight * (1 - Math.min(before, goal) / goal);   // water line inside the big bottle
   const overflow = before + ml > goal;
   const anim = (el, frames, opts) => el.animate(frames, { duration: 1700, easing: 'ease-in-out', fill: 'forwards', ...opts });
 
@@ -289,7 +290,7 @@ function playPour(before, ml) {
     $('bonusCap').style.transform = 'translate(30px, 8px) rotate(30deg)';
     const wrap = $('bigWrap').getBoundingClientRect();
     const b = $('bonusCap').getBoundingClientRect();
-    const sx = 84, sy = 26;
+    const sx = $('bigWrap').clientWidth / 2, sy = 26;
     const ex = b.left + b.width / 2 - wrap.left, ey = b.top - wrap.top + 6;
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');

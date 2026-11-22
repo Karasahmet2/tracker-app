@@ -77,6 +77,11 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 
 ## Updates
 
+### Update 4 · tracker-v4 — Fits the screen
+- The Today page now fits the phone's screen without scrolling. The bottle and the 24-hour line grow or shrink with the screen height (between 170 and 306 px), and on shorter screens the cups, numbers and spacing get a little more compact.
+- Twigs on the 24-hour line are placed by percentage, so they stay at the right time at any size; the pour animation measures the bottle instead of assuming its size.
+- Tests: t06 updated; new t18 checks five screen sizes (including the Redmi with and without Chrome's bars) for no scrolling.
+
 ### Update 3 · tracker-v3 — Edit any day, goal history, themes
 - **Edit any day:** Calendar → a day → "Change this day's drinks" opens that day's log. Tap a drink to change its amount or time, delete it (Trash, with Undo), or add a drink you forgot with its time. Times in the future are refused.
 - **Past days keep their progress:** the daily goal and bonus size now have a history. A new goal counts from today; every earlier day keeps the goal it had, so its fill, extra and "at goal" never change after the fact. Editing one day's drinks only changes that day. (Phones coming from v2 start the history with the goal they have now.)
@@ -104,4 +109,4 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 - Tests t01–t11.
 
 ## Next
-- Update 3: Running — mockups first, then code.
+- Update 5: Running — mockups first, then code.

@@ -7,9 +7,9 @@ module.exports = async () => {
     await addCup(page, '500 ml', { confirm: false });
     const b = page.locator('#timeline .branch');
     eq(await b.count(), 1, 'one branch');
-    eq(await b.evaluate((el) => el.style.top), '178.5px', '14:00 is 14/24 down the line');
+    eq(await b.evaluate((el) => el.style.top), '58.33%', '14:00 is 14/24 down the line');
     eq(await b.locator('.twig').evaluate((el) => el.style.width), '18px', '500 ml twig');
-    eq(await page.locator('#timeline .now-dot').evaluate((el) => el.style.top), '178.5px', 'now marker');
+    eq(await page.locator('#timeline .now-dot').evaluate((el) => el.style.top), '58.33%', 'now marker');
 
     await addCup(page, '1 L', { confirm: false });
     await addCup(page, '1 L', { confirm: false });   // this one passes the goal

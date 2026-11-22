@@ -20,7 +20,12 @@
   --shine:rgba(255,255,255,.22);
   --display:'Space Grotesk', system-ui, sans-serif;
   --body:Inter, system-ui, sans-serif;
-  --H:306px;            /* height of the 24-hour line and the big bottle */
+  /* Height of the 24-hour line and the big bottle: as tall as the screen allows
+     (Update 4), so the Today page fits without scrolling. --rest is everything else. */
+  --rest:530px;
+  --H:clamp(170px, calc(100vh - var(--rest)), 306px);
+  --H:clamp(170px, calc(100dvh - var(--rest)), 306px);
+  --bodyH:calc(var(--H) - 38px);
   color-scheme:dark;
 }
 
@@ -80,7 +85,7 @@ button:disabled{cursor:default}
 .icon-btn{width:44px;height:44px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* ---------- Water: bottles row ---------- */
-.stage{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:14px;padding:18px 20px 0;min-height:340px}
+.stage{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:14px;padding:18px 20px 0;min-height:calc(var(--H) + 30px)}
 
 .timeline{position:relative;width:64px;height:var(--H);flex-shrink:0}
 .timeline .axis{position:absolute;left:24px;top:0;bottom:0;width:2px;border-radius:1px;background:var(--line)}
@@ -110,7 +115,7 @@ button:disabled{cursor:default}
 
 .big .cap{width:58px;height:18px}
 .big .neck{width:78px;height:20px}
-.big .body{width:168px;height:268px;border-radius:48px 48px 38px 38px}
+.big .body{width:min(168px, calc(var(--bodyH) * .63));height:var(--bodyH);border-radius:48px 48px 38px 38px}
 .big.full .cap{background:var(--water)}
 .big.full .neck,.big.full .body{border-color:var(--water)}
 .big.full .body{box-shadow:0 0 40px var(--glow)}
@@ -118,7 +123,7 @@ button:disabled{cursor:default}
 .bonus-col{display:flex;flex-direction:column;align-items:center;gap:10px}
 .bonus .cap{width:26px;height:9px;border-radius:3px}
 .bonus .neck{width:34px;height:9px;border-width:2px;border-radius:3px 3px 0 0}
-.bonus .body{width:70px;height:118px;border-radius:22px 22px 18px 18px;border:2px dashed var(--line-3)}
+.bonus .body{width:min(70px, calc(var(--bodyH) * .26));height:calc(var(--bodyH) * .44);border-radius:22px 22px 18px 18px;border:2px dashed var(--line-3)}
 .bonus .fill{background:var(--water)}
 .bonus-col.locked .bonus{opacity:.7}
 .bonus-col.open .bonus .body{border:3px solid var(--water)}
@@ -129,10 +134,10 @@ button:disabled{cursor:default}
 .bonus-text span{font-size:12px;color:var(--muted)}
 
 /* pour effects */
-.pour-layer{position:absolute;left:0;top:0;width:168px;height:0;z-index:3;pointer-events:none}
-.pour-cup{position:absolute;left:92px;top:-74px;transform-origin:30% 85%}
-.stream{position:absolute;left:80px;top:-34px;width:8px;border-radius:4px;background:var(--water);box-shadow:0 0 12px var(--glow-2);transform-origin:top center;transform:scaleY(0)}
-.splash{position:absolute;left:62px;width:44px;height:12px;border-radius:50%;border:2px solid var(--water-pale);opacity:0}
+.pour-layer{position:absolute;left:0;top:0;width:100%;height:0;z-index:3;pointer-events:none}
+.pour-cup{position:absolute;left:calc(50% + 8px);top:-74px;transform-origin:30% 85%}
+.stream{position:absolute;left:calc(50% - 4px);top:-34px;width:8px;border-radius:4px;background:var(--water);box-shadow:0 0 12px var(--glow-2);transform-origin:top center;transform:scaleY(0)}
+.splash{position:absolute;left:calc(50% - 22px);width:44px;height:12px;border-radius:50%;border:2px solid var(--water-pale);opacity:0}
 .arc-svg{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible}
 
 /* ---------- Water: amount and cups ---------- */
@@ -335,6 +340,21 @@ button:disabled{cursor:default}
 .swatch{position:relative;width:44px;height:44px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 .swatch i{position:absolute;left:0;right:0;bottom:0;height:55%}
 .swatch i + i{height:18%;bottom:55%}
+
+/* shorter screens (most phones with the browser bars showing) */
+@media (max-height:780px){
+  :root{--rest:470px}
+  .head{padding-top:calc(16px + env(safe-area-inset-top))}
+  .head h1{font-size:26px}
+  .stage{padding-top:12px}
+  .amount{padding-top:12px}
+  .amount .big-num{font-size:44px}
+  .cups{padding-top:14px;gap:8px}
+  .cup{height:70px;padding-bottom:9px;gap:6px}
+  .custom-btn{height:46px}
+  .log-link{margin:10px 20px 12px;padding:12px 16px}
+  .nav{height:calc(64px + env(safe-area-inset-bottom))}
+}
 
 /* tiny phones */
 @media (max-width:360px){
