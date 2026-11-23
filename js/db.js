@@ -6,8 +6,9 @@
 //   drinks   { id, ts, ml }                 one row per drink
 //   runs     { id, ts, km, sec, where, incline }   one row per run (v2)
 //              where: 'outdoor' | 'treadmill'; incline in % (treadmill only)
-//   trash    { ...item, kind, deletedAt }    deleted drinks/runs, kept 30 days
-//              kind: 'drink' | 'run'
+//   notes    { id, ts, edited, text, color } quick notes (v3); ts = when written
+//   trash    { ...item, kind, deletedAt }    deleted drinks/runs/notes, kept 30 days
+//              kind: 'drink' | 'run' | 'note'
 //   settings { key, value }
 //
 // Changing the layout? Bump DB_VERSION and add a step in migrate()
@@ -15,7 +16,7 @@
 // =========================================================
 
 const DB_NAME = 'tracker';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 export const TRASH_DAYS = 30;
 
 let dbPromise = null;
@@ -34,7 +35,12 @@ function migrate(db, oldVersion) {
       const runs = db.createObjectStore('runs', { keyPath: 'id' });
       runs.createIndex('ts', 'ts');
     }
-    // case 2: future migrations go here
+    // falls through
+    case 2: {                                   // Update 6: notes
+      const notes = db.createObjectStore('notes', { keyPath: 'id' });
+      notes.createIndex('ts', 'ts');
+    }
+    // case 3: future migrations go here
   }
 }
 
@@ -84,7 +90,7 @@ export async function removeRun(id) {
 }
 
 // Move any item to the Trash / back. kind 'drink' → drinks store, 'run' → runs store.
-const STORE_OF = { drink: 'drinks', run: 'runs' };
+const STORE_OF = { drink: 'drinks', run: 'runs', note: 'notes' };
 export async function trashItem(kind, id) {
   const db = await open();
   const name = STORE_OF[kind];
@@ -100,7 +106,7 @@ export async function trashItem(kind, id) {
 }
 export async function restoreItem(id) {
   const db = await open();
-  const tx = db.transaction(['drinks', 'runs', 'trash'], 'readwrite');
+  const tx = db.transaction(['drinks', 'runs', 'notes', 'trash'], 'readwrite');
   const trash = tx.objectStore('trash');
   const t = await done(trash.get(id));
   if (t) {
@@ -110,6 +116,17 @@ export async function restoreItem(id) {
   }
   await finished(tx);
   return t || null;
+}
+
+// ---------- notes (Update 6) ----------
+export async function allNotes() {
+  return done((await store('notes')).getAll());
+}
+export async function putNote(n) {
+  return done((await store('notes', 'readwrite')).put(n));
+}
+export async function removeNote(id) {
+  return done((await store('notes', 'readwrite')).delete(id));
 }
 
 // ---------- trash ----------
@@ -150,15 +167,16 @@ export async function setSettings(obj) {
 
 // ---------- backup ----------
 export async function exportAll() {
-  return { drinks: await allDrinks(), runs: await allRuns(), trash: await trashList(), settings: await getSettings() };
+  return { drinks: await allDrinks(), runs: await allRuns(), notes: await allNotes(), trash: await trashList(), settings: await getSettings() };
 }
 
 // Replaces everything with the backup's contents
 export async function importAll(data) {
   const db = await open();
-  const tx = db.transaction(['drinks', 'runs', 'trash', 'settings'], 'readwrite');
-  const drinks = tx.objectStore('drinks'), runs = tx.objectStore('runs'), trash = tx.objectStore('trash'), settings = tx.objectStore('settings');
-  drinks.clear(); runs.clear(); trash.clear(); settings.clear();
+  const tx = db.transaction(['drinks', 'runs', 'notes', 'trash', 'settings'], 'readwrite');
+  const drinks = tx.objectStore('drinks'), runs = tx.objectStore('runs'), notes = tx.objectStore('notes'), trash = tx.objectStore('trash'), settings = tx.objectStore('settings');
+  drinks.clear(); runs.clear(); notes.clear(); trash.clear(); settings.clear();
+  (data.notes || []).forEach((n) => notes.put(n));
   (data.drinks || []).forEach((d) => drinks.put(d));
   (data.runs || []).forEach((r) => runs.put(r));
   (data.trash || []).forEach((t) => trash.put(t));

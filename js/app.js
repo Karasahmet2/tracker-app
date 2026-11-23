@@ -3,7 +3,9 @@
 //   #/water       Today (bottles, cups)
 //   #/water/log   Today's log
 //   #/running     Running (coming next)
-//   #/calendar/month|week|day/YYYY-MM-DD   Calendar
+//   #/calendar/month|week|day/YYYY-MM-DD   Calendar (also /calendar/run/…)
+//   #/notes, #/notes/YYYY-MM-DD           Notes (jump to a day)
+//   #/calendar/notes/month/YYYY-MM-DD     Notes calendar
 // =========================================================
 import { load, onChange, state } from './state.js';
 import { $, dayKey, handleBack, isSheetOpen, showToast } from './ui.js';
@@ -11,6 +13,8 @@ import { mountToday, mountLog } from './water.js';
 import { mountCalendar } from './calendar.js';
 import { mountRunning } from './running.js';
 import { mountRunCalendar } from './runcal.js';
+import { mountNotes } from './notes.js';
+import { mountNotesCalendar } from './notescal.js';
 import { applyTheme } from './themes.js';
 
 const routes = {
@@ -18,7 +22,9 @@ const routes = {
   '/water/log': { tab: 'water', mount: mountLog },
   '/running': { tab: 'running', mount: mountRunning },
   '/calendar': { tab: 'calendar', mount: mountCalendar },     // takes /view/date after it
-  '/calendar/run': { tab: 'calendar', mount: mountRunCalendar, habit: 'run' }
+  '/calendar/run': { tab: 'calendar', mount: mountRunCalendar, habit: 'run' },
+  '/notes': { tab: 'notes', mount: mountNotes },
+  '/calendar/notes': { tab: 'calendar', mount: mountNotesCalendar, habit: 'notes' }
 };
 
 let page = null;
@@ -48,8 +54,9 @@ function show() {
   // the Calendar tab opens the habit you were last looking at
   if (route.tab === 'water') lastHabit = 'water';
   if (route.tab === 'running' || route.habit === 'run') lastHabit = 'run';
+  if (route.tab === 'notes' || route.habit === 'notes') lastHabit = 'notes';
   if (route.tab === 'calendar' && !route.habit) lastHabit = 'water';
-  document.querySelector('#nav [data-tab="calendar"]').setAttribute('href', lastHabit === 'run' ? '#/calendar/run' : '#/calendar');
+  document.querySelector('#nav [data-tab="calendar"]').setAttribute('href', { water: '#/calendar', run: '#/calendar/run', notes: '#/calendar/notes' }[lastHabit]);
   document.querySelectorAll('#nav [data-tab]').forEach((a) => {
     const on = a.dataset.tab === route.tab;
     a.classList.toggle('active', on);

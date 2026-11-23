@@ -29,7 +29,7 @@ export function openSettings() {
     <p class="hint">A new running goal counts from this week. Past weeks keep theirs.</p>
     <label class="check"><input type="checkbox" id="askIn" ${s.ask ? 'checked' : ''}><span><b>Ask before adding a cup</b><small>Shows "Add 330 ml?" so a mis-tap doesn't count</small></span></label>
     <div class="group"><span>Cup buttons — tap one to remove it</span><div class="pills" id="cupPills">${cupPills}</div></div>
-    <button class="row-btn" id="openTrash">Trash <span>Deleted drinks and runs, kept 30 days ›</span></button>
+    <button class="row-btn" id="openTrash">Trash <span>Deleted drinks, runs and notes, kept 30 days ›</span></button>
     <button class="row-btn" id="openBackup">Backup <span>Save or load your data ›</span></button>
     <p class="foot-note" style="margin:0">Version ${esc(APP_VERSION)} · Your data stays on this phone.</p>`, {
     label: 'Settings',
@@ -82,8 +82,8 @@ async function openTrash() {
   const when = (t) => `${new Date(t.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${hhmm(t.ts)}`;
   const rows = items.map((t) => `
     <li class="entry">
-      <div class="ico ${t.kind === 'run' ? 'run' : ''}">${t.kind === 'run' ? icons.run : icons.cup(20)}</div>
-      <div class="what"><b>${t.kind === 'run' ? `${Number(t.km).toFixed(1)} km run` : fmtMl(t.ml)}</b><span>${when(t)} · ${daysLeft(t)} days left</span></div>
+      <div class="ico ${t.kind === 'run' ? 'run' : t.kind === 'note' ? 'note-ico c-' + esc(t.color || 'plain') : ''}">${t.kind === 'run' ? icons.run : t.kind === 'note' ? icons.note : icons.cup(20)}</div>
+      <div class="what"><b>${t.kind === 'run' ? `${Number(t.km).toFixed(1)} km run` : t.kind === 'note' ? esc(String(t.text).slice(0, 40)) + (String(t.text).length > 40 ? '…' : '') : fmtMl(t.ml)}</b><span>${when(t)} · ${daysLeft(t)} days left</span></div>
       <button class="restore" data-restore="${t.id}">Restore</button>
     </li>`).join('');
   openSheet(`
@@ -97,7 +97,7 @@ async function openTrash() {
         if (!b) return;
         const t = await restoreItem(b.dataset.restore);
         b.closest('li').remove();
-        if (t) showToast(t.kind === 'run' ? `Restored the ${Number(t.km).toFixed(1)} km run` : `Restored ${fmtMl(t.ml)}`);
+        if (t) showToast(t.kind === 'run' ? `Restored the ${Number(t.km).toFixed(1)} km run` : t.kind === 'note' ? 'Restored the note' : `Restored ${fmtMl(t.ml)}`);
         if (!$('trashList').children.length) $('trashList').innerHTML = '<li class="empty">Trash is empty.</li>';
       };
       const empty = $('emptyTrash');

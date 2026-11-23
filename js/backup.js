@@ -31,6 +31,8 @@ export async function loadBackup(file) {
       .map((d) => ({ id: d.id, ts: d.ts, ml: d.ml })),
     runs: (data.runs || []).filter((r) => r && typeof r.id === 'string' && Number.isFinite(r.ts) && Number.isFinite(r.km))
       .map((r) => ({ id: r.id, ts: r.ts, km: r.km, sec: Number(r.sec) || 0, where: r.where === 'treadmill' ? 'treadmill' : 'outdoor', incline: Number(r.incline) || 0 })),
+    notes: (data.notes || []).filter((n) => n && typeof n.id === 'string' && Number.isFinite(n.ts) && typeof n.text === 'string')
+      .map((n) => ({ id: n.id, ts: n.ts, edited: Number.isFinite(n.edited) ? n.edited : null, text: n.text, color: String(n.color || 'plain') })),
     trash: (data.trash || []).filter((t) => t && typeof t.id === 'string' && Number.isFinite(t.ts)),
     settings: data.settings && typeof data.settings === 'object' ? data.settings : {}
   };

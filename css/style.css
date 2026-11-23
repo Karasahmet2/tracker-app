@@ -5,6 +5,9 @@
 
 /* ---------- Theme ---------- */
 :root{
+  --note:#F2C94C; --note-ink:#1F1800;
+  --n-plain:#8B9BB8; --n-plain-bg:#121A2E; --n-yellow:#F2C94C; --n-yellow-bg:#3A3214; --n-green:#5BD18B; --n-green-bg:#15321F;
+  --n-blue:#5FB6F0; --n-blue-bg:#13304A; --n-pink:#F27AB6; --n-pink-bg:#3A1830; --n-purple:#A88BF5; --n-purple-bg:#2A1F47; --mark:rgba(242,201,76,.35);
   --run:#FF8A4C; --run-light:#FFC29E; --run-pale:#FFE1CF; --run-ink:#1A0B03; --run-tint:#3A2216; --run-glow:rgba(255,138,76,.55);
   /* Midnight (default theme). Every colour in the app comes from these. */
   --bg:#0A1020; --surface:#121A2E; --surface-2:#1A2540; --deep:#0F172A;
@@ -33,6 +36,9 @@
 
 /* ---------- Themes (Update 3) ---------- */
 [data-theme="daylight"]{
+  --note:#C99A0E; --note-ink:#1F1800;
+  --n-plain:#56677F; --n-plain-bg:#FFFFFF; --n-yellow:#C99A0E; --n-yellow-bg:#FFF4CC; --n-green:#23985A; --n-green-bg:#DDF5E6;
+  --n-blue:#1E78C2; --n-blue-bg:#DCEEFC; --n-pink:#C93C83; --n-pink-bg:#FCE1EF; --n-purple:#6E4FCF; --n-purple-bg:#EAE3FD; --mark:rgba(201,154,14,.3);
   --run:#E4632A; --run-light:#B8471A; --run-pale:#FBD9C6; --run-ink:#1A0B03; --run-tint:#FDE7DB; --run-glow:rgba(228,99,42,.45);
   --bg:#F3F6FA; --surface:#FFFFFF; --surface-2:#E9EFF6; --deep:#E7EEF6;
   --line:#D6E0EC; --line-2:#BCCBDD; --line-3:#9DB1C9;
@@ -73,7 +79,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-tap-highlight-color:transparent;overscroll-behavior-y:contain}
-button,input{font:inherit;color:inherit}
+button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{cursor:default}
 :focus-visible{outline:2px solid var(--water-light);outline-offset:2px}
@@ -164,7 +170,7 @@ button:disabled{cursor:default}
 .log-link span{font-size:13px;color:var(--muted)}
 
 /* ---------- Nav ---------- */
-.nav{height:calc(76px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);border-top:1px solid var(--nav-line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--nav-bg);position:sticky;bottom:0;z-index:4}
+.nav{height:calc(76px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);border-top:1px solid var(--nav-line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--nav-bg);position:sticky;bottom:0;z-index:4}
 .nav a{color:var(--muted);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600}
 .nav a.active{color:var(--water-light)}
 
@@ -384,6 +390,7 @@ button:disabled{cursor:default}
 .run-actions{padding:14px 20px 0;display:flex;flex-direction:column;gap:8px}
 .btn.run-primary{background:var(--run);border:none;color:var(--run-ink);font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
 .run-again{height:44px;font-size:14px}
+.ico.note-ico{background:var(--nbg);color:var(--nc)}
 .ico.run{background:var(--run-tint);color:var(--run-light)}
 
 /* log-a-run sheet */
@@ -442,6 +449,65 @@ button:disabled{cursor:default}
 .rsum b.x-run{color:var(--run-light)}
 .run-list{margin-top:14px}
 .run-list .what small{font-weight:500;color:var(--muted);font-size:13px}
+
+/* ---------- Notes (Update 6) ---------- */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.nav a.active[data-tab="notes"]{color:var(--note)}
+.icon-btn.on{border-color:var(--note)}
+.c-plain{--nc:var(--n-plain);--nbg:var(--n-plain-bg)} .c-yellow{--nc:var(--n-yellow);--nbg:var(--n-yellow-bg)}
+.c-green{--nc:var(--n-green);--nbg:var(--n-green-bg)} .c-blue{--nc:var(--n-blue);--nbg:var(--n-blue-bg)}
+.c-pink{--nc:var(--n-pink);--nbg:var(--n-pink-bg)} .c-purple{--nc:var(--n-purple);--nbg:var(--n-purple-bg)}
+.search-row{margin:14px 20px 0;display:flex;gap:8px;align-items:center}
+.search-row input{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--surface);font-size:16px;outline:none}
+.search-row input:focus{border-color:var(--note)}
+.quick{margin:14px 20px 0;padding:12px 14px;border-radius:20px;background:var(--deep);border:1.5px solid var(--note);display:flex;flex-direction:column;gap:10px}
+.quick textarea{resize:none;background:none;border:none;outline:none;font-size:16px;line-height:1.4;padding:0;min-height:44px}
+.quick-row{display:flex;align-items:center;gap:10px}
+.swatches{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.swatches.big{gap:14px}
+.swatch-dot{width:28px;height:28px;border-radius:50%;background:var(--nc);border:none;flex-shrink:0;padding:0}
+.swatches.big .swatch-dot{width:36px;height:36px}
+.swatch-dot.c-plain{background:none;border:2px solid var(--n-plain)}
+.swatch-dot.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--nc)}
+.btn.note-save{background:var(--note);border:none;color:var(--note-ink);font-weight:700}
+.quick .note-save{margin-left:auto;height:40px;padding:0 18px;border-radius:12px;font-size:14px}
+.note-filters{padding:12px 20px 0;display:flex;gap:6px;flex-wrap:wrap}
+.note-filters button{height:32px;padding:0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.note-filters .chip-all.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:700}
+.note-filters .chip-color.on{border-color:var(--nc, var(--note));border-width:2px}
+.note-filters .dot{width:12px;height:12px;border-radius:50%;background:var(--nc)}
+.note-filters .dot.c-plain{background:none;border:2px solid var(--n-plain)}
+.note-list{padding:4px 20px 20px}
+.note-day h2{margin:16px 4px 8px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.note-day ul,.day-notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.note-day.flash h2{color:var(--note)}
+.note{border-radius:18px;background:var(--nbg)}
+.note.new{animation:pop .4s cubic-bezier(.2,.9,.3,1.3)}
+.note-body{width:100%;display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:none;border:none;text-align:left;border-radius:18px}
+.note-text{font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.note-text mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+.note-meta{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-2)}
+.note-meta .dot{width:8px;height:8px;border-radius:50%;background:var(--nc)}
+.result-count{margin:12px 4px 0;font-size:12px;color:var(--muted);font-weight:600}
+.note-list .empty,.day-notes .empty{padding:32px 12px;text-align:center;color:var(--muted);font-size:14px}
+.note-edit{resize:none;padding:16px;border-radius:18px;background:var(--nbg);border:none;outline:none;font-size:16px;line-height:1.5;min-height:150px}
+.note-times{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:var(--deep);font-size:13px}
+.note-times div{display:flex;justify-content:space-between}
+.note-times span{color:var(--muted)}
+/* notes calendar */
+.habit-switch a.on.notes{background:var(--note);color:var(--note-ink)}
+.habit-switch a{padding:0 9px;font-size:12px}
+.ncell.selected{border:2px solid var(--note);background:var(--surface-2)}
+.ncell .stripes{position:absolute;left:5px;right:5px;bottom:5px;display:flex;gap:2px}
+.ncell .stripes i{flex:1;border-radius:2px;background:var(--nc);transform-origin:bottom;animation:calGrow .4s ease-out both}
+.ncell .more{position:absolute;right:5px;bottom:4px;font-size:9px;font-weight:800}
+@keyframes calGrow{from{transform:scaleY(0)}}
+.ncell.today .mnum{color:var(--amber)}
+.legend .stripe-i{width:14px;height:12px;border-radius:2px;background:linear-gradient(90deg,var(--n-yellow) 0 30%,transparent 30% 35%,var(--n-green) 35% 65%,transparent 65% 70%,var(--n-pink) 70%)}
+.day-notes-head{margin:16px 20px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.day-notes-head h2{margin:0;font-size:14px;font-weight:700}
+.day-notes-head a{font-size:13px;font-weight:600;color:var(--note)}
+.day-notes{padding:0 20px}
 
 /* shorter screens (most phones with the browser bars showing) */
 @media (max-height:780px){

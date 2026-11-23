@@ -19,7 +19,7 @@ export const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getD
 export const mondayOf = (date) => addDays(date, -((date.getDay() + 6) % 7));
 export const todayKey = () => dayKey(Date.now());
 export const isFuture = (key) => key > todayKey();
-export const href = (view, key, habit = 'water') => `#/calendar/${habit === 'run' ? 'run/' : ''}${view}/${key}`;
+export const href = (view, key, habit = 'water') => `#/calendar/${habit === 'water' ? '' : habit + '/'}${habit === 'notes' ? 'month' : view}/${key}`;
 
 // Totals for every day, worked out once per page draw
 function totalsByDay() {
@@ -36,17 +36,19 @@ export const WAVE = (fill) =>
 // Page shell: title, Day/Week/Month switch, ‹ period ›
 // =========================================================
 export function shell(view, key, { label, right, prevKey, nextKey, habit = 'water', legend }) {
+  const HABIT_NAME = { water: 'Water', run: 'Running', notes: 'Notes' };
   const h = (v, k) => href(v, k, habit);
   const tabs = ['day', 'week', 'month'];
   return `
     <header class="head">
-      <div><div class="date">${habit === 'run' ? 'Running' : 'Water'}</div><h1>Calendar</h1></div>
+      <div><div class="date">${HABIT_NAME[habit]}</div><h1>Calendar</h1></div>
       <div class="habit-switch" role="tablist" aria-label="Habit">
         <a href="${href(view, key, 'water')}" role="tab" aria-selected="${habit === 'water'}" class="${habit === 'water' ? 'on' : ''}" data-habit="water">Water</a>
         <a href="${href(view, key, 'run')}" role="tab" aria-selected="${habit === 'run'}" class="${habit === 'run' ? 'on run' : ''}" data-habit="run">Running</a>
+        <a href="${href(view, key, 'notes')}" role="tab" aria-selected="${habit === 'notes'}" class="${habit === 'notes' ? 'on notes' : ''}" data-habit="notes">Notes</a>
       </div>
     </header>
-    <div class="zoom ${habit === 'run' ? 'run' : ''}" role="tablist" aria-label="Zoom">
+    <div class="zoom ${habit} ${habit === 'notes' ? 'hidden' : ''}" role="tablist" aria-label="Zoom">
       ${tabs.map((v) => `<a href="${h(v, key)}" role="tab" aria-selected="${v === view}" class="${v === view ? 'on' : ''}" data-zoom="${v}">${v[0].toUpperCase() + v.slice(1)}</a>`).join('')}
     </div>
     <div class="period">
@@ -62,7 +64,7 @@ export function shell(view, key, { label, right, prevKey, nextKey, habit = 'wate
     <div class="legend">
       ${legend || `<span><i style="background:var(--water)"></i>Up to goal</span>
       <span><i style="background:var(--bonus)"></i>Extra</span>`}
-      <span class="legend-tip">Pinch to zoom</span>
+      ${habit === 'notes' ? '' : '<span class="legend-tip">Pinch to zoom</span>'}
     </div>`;
 }
 

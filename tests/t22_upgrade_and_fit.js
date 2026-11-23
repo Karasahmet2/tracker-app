@@ -34,7 +34,8 @@ module.exports = async () => {
     eq(await page.locator('#totalNum').innerText(), '0.75', 'old drink kept');
     eq(await page.locator('#goalOf').innerText(), '/ 3 L', 'old goal kept');
     const stores = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('tracker'); r.onsuccess = () => { res([r.result.version, [...r.result.objectStoreNames]]); r.result.close(); }; }));
-    eq(stores[0], 2, 'database upgraded to v2');
+    eq(stores[0], 3, 'database upgraded to the latest version');
+    assert(stores[1].includes('notes'), 'notes store added');
     assert(stores[1].includes('runs'), 'runs store added');
 
     await page.goto(url + '#/running');

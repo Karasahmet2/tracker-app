@@ -31,10 +31,12 @@ you upload is exactly what runs on the phone.
 | Themes | `js/themes.js` | The theme list and switching; the colours are in `css/style.css` |
 | Running | `js/running.js` | The Running page: weekly track, week strip, log / change a run (outdoor or treadmill with incline) |
 | Running calendar | `js/runcal.js` | Month (with week rings), Week and Day for runs; addresses like `#/calendar/run/week/2026-11-17` |
+| Notes | `js/notes.js` | Quick notes: write box, colours, search, colour filter, edit / delete |
+| Notes calendar | `js/notescal.js` | Month only, a stripe per note; tap a day for its notes; `#/calendar/notes/month/2026-11-20` |
 | Calendar | `js/calendar.js` | Month, Week and Day views, Day/Week/Month switch, pinch to zoom; addresses like `#/calendar/week/2026-11-17` |
 | Settings | `js/settings.js` | Goal, bonus size, "ask before adding", cup buttons, Trash, Backup |
 | Backup | `js/backup.js` | Save all data to a file and load it back |
-| Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, runs, trash, settings |
+| Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, runs, notes, trash, settings |
 | Version | `js/version.js` | Shown in Settings; must match `sw.js` |
 | Look | `css/style.css` | All styles, grouped by part |
 | Offline | `sw.js` | Saves the app files on the phone; its version tells phones to update |
@@ -79,6 +81,16 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 
 ## Updates
 
+### Update 6 · tracker-v6 — Notes
+- **Notes tab** (the bottom bar now has Water · Running · Notes · Calendar). Notes use yellow, like a sticky note.
+- **Quick note:** type in "What's on your mind?" and tap Save or press Enter (Shift+Enter for a new line). Pick one of six colours; the next note starts with the colour you used last. Each note keeps the date and time it was written. Undo right after saving.
+- **List:** newest at the top, grouped by day (Today, Yesterday, Fri 20 Nov…), with the time and "edited" if you changed it.
+- **Edit:** tap a note to change its text or colour (the written time stays) or delete it. Deleted notes go to the Trash for 30 days.
+- **Search:** the magnifier opens a search bar. Every word must appear, in any order and any case; matches are highlighted. **Colour filters** show only one colour.
+- **Notes calendar:** month only. Each day has a stripe per note in its colour (up to four, then "+N"). Tap a day to see its notes under the month; **Show in list** jumps to that day in the list.
+- **Saved data:** the database goes to version 3 (adds notes). Phones upgrade automatically and keep everything; backups include notes, so keep backup files private.
+- Tests: t22 updated; new t23 (writing notes), t24 (edit, colour, delete, Trash), t25 (search and colour filter), t26 (notes calendar).
+
 ### Update 5 · tracker-v5 — Running
 - **Running page:** the week's goal (15 km by default) is a running track that fills lap by lap. A white runner dot runs to the new total when you save a run, small markers show where each run ended, and past the goal a lighter **bonus lap** (5 km) fills on the inside. Below: the week's days as small orange pills (a slope mark for treadmill days), **Log a run**, and **Same as last** to repeat your usual run.
 - **Log a run:** Outdoor or Treadmill; distance (or quick 3/5/8/10/21.1 km); time as 28:40, 1:02:30 or just minutes; for treadmill, the incline in % (0–15, quick 0/1/2/4/6). Pace, speed and metres climbed are worked out as you type. Pick another date and time for runs you forgot. Times in the future are refused.
@@ -121,4 +133,5 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 - Tests t01–t11.
 
 ## Next
-- Ideas: notes or "how it felt" on runs; Stats across water and running.
+- Pin a note to a run or a day; privacy settings for notes.
+- Ideas: "how it felt" on runs; Stats across water and running.

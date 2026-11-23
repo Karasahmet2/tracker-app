@@ -16,13 +16,15 @@ export const DEFAULTS = {
   goalLog: null,                 // [{ from: 'YYYY-MM-DD', goal, bonus }] — see goalFor()
   runGoal: 15,                   // km per week (Monday–Sunday)
   runBonus: 5,                   // km on the bonus lap
-  runGoalLog: null               // [{ from: 'YYYY-MM-DD' (a Monday), goal, bonus }]
+  runGoalLog: null,              // [{ from: 'YYYY-MM-DD' (a Monday), goal, bonus }]
+  noteColor: 'yellow'            // colour the next quick note starts with
 };
 
 export const state = {
   settings: { ...DEFAULTS },
   drinks: [],                    // { id, ts, ml }
-  runs: []                       // { id, ts, km, sec, where, incline }
+  runs: [],                      // { id, ts, km, sec, where, incline }
+  notes: []                      // { id, ts, edited, text, color }
 };
 
 const listeners = new Set();
@@ -35,6 +37,7 @@ export async function load() {
   state.settings = { ...DEFAULTS, ...(await db.getSettings()) };
   state.drinks = (await db.allDrinks()).sort((a, b) => a.ts - b.ts);
   state.runs = (await db.allRuns()).sort((a, b) => a.ts - b.ts);
+  state.notes = (await db.allNotes()).sort((a, b) => b.ts - a.ts);   // newest first
   if (!Array.isArray(state.settings.runGoalLog) || !state.settings.runGoalLog.length) {
     state.settings.runGoalLog = [{ from: '0000-00-00', goal: state.settings.runGoal, bonus: state.settings.runBonus }];
     await db.setSetting('runGoalLog', state.settings.runGoalLog);
@@ -195,7 +198,9 @@ export async function restoreItem(id) {
   const t = await db.restoreItem(id);
   if (t) {
     const { kind, deletedAt, ...item } = t;
-    if (kind === 'run') state.runs.push(item); else state.drinks.push(item);
+    if (kind === 'run') state.runs.push(item);
+    else if (kind === 'note') { state.notes.push(item); state.notes.sort((a, b) => b.ts - a.ts); }
+    else state.drinks.push(item);
     state.runs.sort((a, b) => a.ts - b.ts);
     state.drinks.sort((a, b) => a.ts - b.ts);
   }
@@ -207,3 +212,41 @@ export async function restoreItem(id) {
 export const paceSec = (r) => (r.km > 0 ? r.sec / r.km : 0);              // seconds per km
 export const speedKmh = (r) => (r.sec > 0 ? r.km / (r.sec / 3600) : 0);
 export const climbedM = (r) => (r.where === 'treadmill' ? Math.round(r.km * 1000 * (r.incline || 0) / 100) : 0);
+
+// =========================================================
+// Notes (Update 6). Kept newest first. `ts` is when the note
+// was written and never changes; `edited` is the last change.
+// =========================================================
+export const NOTE_COLORS = ['plain', 'yellow', 'green', 'blue', 'pink', 'purple'];
+const cleanColor = (c) => (NOTE_COLORS.includes(c) ? c : 'plain');
+
+export async function addNote(text, color = state.settings.noteColor) {
+  const n = { id: uid(), ts: Date.now(), edited: null, text: String(text).trim(), color: cleanColor(color) };
+  state.notes.unshift(n);
+  await db.putNote(n);
+  emit();
+  return n;
+}
+export async function updateNote(id, changes) {
+  const n = state.notes.find((x) => x.id === id);
+  if (!n) return null;
+  const before = { ...n };
+  if (changes.text != null) n.text = String(changes.text).trim();
+  if (changes.color != null) n.color = cleanColor(changes.color);
+  n.edited = changes.edited !== undefined ? changes.edited : Date.now();
+  await db.putNote({ ...n });
+  emit();
+  return before;
+}
+export async function deleteNote(id) {
+  const n = await db.trashItem('note', id);
+  state.notes = state.notes.filter((x) => x.id !== id);
+  emit();
+  return n;
+}
+export async function undoAddNote(id) {
+  await db.removeNote(id);
+  state.notes = state.notes.filter((x) => x.id !== id);
+  emit();
+}
+export const notesOn = (key) => state.notes.filter((n) => dayKey(n.ts) === key);
