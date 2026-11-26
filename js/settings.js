@@ -6,6 +6,7 @@ import { applyTheme, THEMES } from './themes.js';
 import * as db from './db.js';
 import { $, esc, icons, fmtMl, hhmm, openSheet, closeSheet, showToast } from './ui.js';
 import { saveBackup, loadBackup } from './backup.js';
+import { safety, askPersist, checkPersisted, lastBackupText } from './safety.js';
 import { APP_VERSION } from './version.js';
 
 const head = (title) =>
@@ -30,7 +31,11 @@ export function openSettings() {
     <label class="check"><input type="checkbox" id="askIn" ${s.ask ? 'checked' : ''}><span><b>Ask before adding a cup</b><small>Shows "Add 330 ml?" so a mis-tap doesn't count</small></span></label>
     <div class="group"><span>Cup buttons — tap one to remove it</span><div class="pills" id="cupPills">${cupPills}</div></div>
     <button class="row-btn" id="openTrash">Trash <span>Deleted drinks, runs and notes, kept 30 days ›</span></button>
-    <button class="row-btn" id="openBackup">Backup <span>Save or load your data ›</span></button>
+    <button class="row-btn" id="openBackup">Backup <span>Last: ${lastBackupText()} ›</span></button>
+    <div class="safety" id="safetyBox">
+      <div class="safety-row"><b>Protected from clean-up</b><span id="persistState">Checking…</span></div>
+      <p class="hint">This app's data lives in Chrome at <b>${esc(location.host)}</b>. Clearing Chrome's data for this site also clears every app at this address, so keep backups.</p>
+    </div>
     <p class="foot-note" style="margin:0">Version ${esc(APP_VERSION)} · Your data stays on this phone.</p>`, {
     label: 'Settings',
     onMount: () => {
@@ -72,6 +77,14 @@ export function openSettings() {
       };
       $('openTrash').onclick = openTrash;
       $('openBackup').onclick = openBackup;
+      const showPersist = () => {
+        const el = $('persistState'); if (!el) return;
+        if (safety.persisted) { el.textContent = 'On'; el.className = 'ok'; return; }
+        el.innerHTML = safety.supported ? '<button class="pill" id="askPersist">Turn on</button>' : 'Not available';
+        const b = $('askPersist');
+        if (b) b.onclick = async () => { const ok = await askPersist(); showPersist(); if (!ok) showToast('Chrome said not yet. Installing the app to your home screen usually allows it.'); };
+      };
+      checkPersisted().then(showPersist);
     }
   });
 }
@@ -111,7 +124,7 @@ async function openTrash() {
   });
 }
 
-function openBackup() {
+export function openBackup() {
   openSheet(`
     ${head('Backup')}
     <p style="margin:0;color:var(--text-2);font-size:14px;line-height:1.5">Save a backup file before big updates. Loading a backup replaces everything in the app with what's in the file.</p>
@@ -119,7 +132,12 @@ function openBackup() {
     <label class="btn" style="display:flex;align-items:center;justify-content:center;cursor:pointer">Load a backup…<input type="file" id="loadBk" accept="application/json,.json" class="hidden"></label>`, {
     label: 'Backup',
     onMount: () => {
-      $('saveBk').onclick = async () => { const name = await saveBackup(); showToast(`Saved ${name}`); };
+      $('saveBk').onclick = async () => {
+        const name = await saveBackup({ useShare: true });
+        if (!name) return;
+        await reloadAll();
+        showToast(`Saved ${name}`);
+      };
       $('loadBk').onchange = async () => {
         const file = $('loadBk').files[0];
         if (!file) return;

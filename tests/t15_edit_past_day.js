@@ -12,9 +12,11 @@ module.exports = async () => {
 
     // add a forgotten drink at 20:30
     await page.locator('#addPast').click();
+    await page.locator('#otherAmt').click();
     await page.locator('#amt').fill('700');
     await page.locator('#timeIn').fill('20:30');
-    await page.locator('#saveDrink').click();
+    await page.locator('#timeIn').dispatchEvent('change');
+    await page.locator('#addIt').click();
     await page.waitForFunction(() => document.getElementById('logTotal').textContent === '2.20 L');
     eq(await page.locator('#entries .entry').first().locator('time').innerText(), '20:30', 'newest first');
 
@@ -39,7 +41,8 @@ module.exports = async () => {
     await page.waitForSelector('#addPast');
     await page.locator('#addPast').click();
     await page.locator('#timeIn').fill('18:00');
-    await page.locator('#saveDrink').click();
+    await page.locator('#timeIn').dispatchEvent('change');
+    await page.locator('#addIt').click();
     await page.locator('.toast span', { hasText: "hasn't happened yet" }).waitFor();
     await page.goBack();
 

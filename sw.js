@@ -3,7 +3,7 @@
 // Raise VERSION by one in every update (and in js/version.js):
 // that's what tells phones a new version exists.
 // =========================================================
-const VERSION = 'tracker-v6';
+const VERSION = 'tracker-v7';
 
 const FILES = [
   './',
@@ -23,6 +23,7 @@ const FILES = [
   './js/runcal.js',
   './js/notes.js',
   './js/notescal.js',
+  './js/safety.js',
   './js/version.js',
   './icons/icon.svg',
   './icons/icon-192.png',

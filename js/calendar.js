@@ -7,7 +7,7 @@
 // =========================================================
 import { state, drinksOn, goalFor } from './state.js';
 import { $, esc, icons, hhmm, dayKey, fmtMl, fmtL } from './ui.js';
-import { timelineHTML } from './water.js';
+import { timelineHTML, openAddDrinkSheet } from './water.js';
 
 const VIEWS = ['day', 'week', 'month'];           // zoom order, most detailed first
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -63,7 +63,7 @@ export function shell(view, key, { label, right, prevKey, nextKey, habit = 'wate
     <div class="cal-body" id="calBody"></div>
     <div class="legend">
       ${legend || `<span><i style="background:var(--water)"></i>Up to goal</span>
-      <span><i style="background:var(--bonus)"></i>Extra</span>`}
+      <span><i style="background:var(--bonus)"></i>Extra</span>${view === 'month' ? '<span><i class="ring-i water"></i>Week</span>' : ''}`}
       ${habit === 'notes' ? '' : '<span class="legend-tip">Pinch to zoom</span>'}
     </div>`;
 }
@@ -96,6 +96,7 @@ function mountMonth(view, key) {
   const start = mondayOf(first);
   const rows = Math.ceil(((first.getDay() + 6) % 7 + days) / 7);
   let cells = '';
+  let wk = { total: 0, target: 0, extra: 0, cap: 0 };      // sums for this row's week ring
   for (let i = 0; i < rows * 7; i++) {
     const date = addDays(start, i);
     const k = dayKey(date);
@@ -115,11 +116,29 @@ function mountMonth(view, key) {
     cells += future
       ? `<span class="${cls}" aria-label="${aria}" data-day="${k}">${inner}</span>`
       : `<a class="${cls}" href="${href('day', k)}" aria-label="${aria}" data-day="${k}" data-ml="${ml}">${inner}</a>`;
+
+    // Update 7: the week's ring. Its goal grows one day at a time, so the
+    // current week isn't judged on days that haven't happened yet.
+    if (!future) { wk.total += ml; wk.target += goal; wk.extra += ex; wk.cap += bonus; }
+    if (i % 7 === 6) {
+      const mon = addDays(date, -6);
+      const f = wk.target ? Math.min(1, wk.total / wk.target) : 0;
+      const e = wk.cap ? Math.min(1, wk.extra / wk.cap) : 0;
+      const counted = wk.target > 0;
+      const row = Math.floor(i / 7);
+      cells += `<a class="wring water ${counted ? '' : 'not-yet'}" href="${href('week', dayKey(mon))}" data-week="${dayKey(mon)}"
+        aria-label="Week of ${mon.getDate()} ${mon.toLocaleDateString('en-GB', { month: 'short' })}: ${fmtL(wk.total)} of ${fmtL(wk.target)} litres">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="ring-bg"/>
+          <circle cx="18" cy="18" r="15" class="ring" pathLength="100" style="stroke-dasharray:${(f * 100).toFixed(1)} 100;animation-delay:${row * 250 + 200}ms"/>
+          ${e ? `<circle cx="18" cy="18" r="10.5" class="ring bonus" pathLength="100" style="stroke-dasharray:${(e * 100).toFixed(1)} 100;animation-delay:${row * 250 + 400}ms"/>` : ''}</svg>
+        <span><b>${counted ? (wk.total / 1000).toFixed(1) : '–'}</b>${counted ? '<small>L</small>' : ''}</span></a>`;
+      wk = { total: 0, target: 0, extra: 0, cap: 0 };
+    }
   }
 
   $('calBody').innerHTML = `
-    <div class="mgrid weekdays">${WEEKDAYS.map((w) => `<span>${w.toUpperCase()}</span>`).join('')}</div>
-    <div class="mgrid" id="monthGrid">${cells}</div>`;
+    <div class="mgrid rgrid weekdays">${WEEKDAYS.map((w) => `<span>${w.toUpperCase()}</span>`).join('')}<span>WEEK</span></div>
+    <div class="mgrid rgrid" id="monthGrid">${cells}</div>`;
   return { update: () => mountMonth(view, key), destroy() {} };
 }
 
@@ -240,7 +259,11 @@ function mountDay(view, key) {
           <time>${hhmm(d.ts)}</time>
         </li>`).join('')}
     </ul>
-    <a class="log-link" id="editDay" href="#/water/log${isToday ? '' : '/' + key}"><b>Change this day's drinks</b><span>Add, edit or delete ›</span></a>`;
+    <div class="day-actions">
+      <button class="btn primary" id="addDayDrink">${icons.plus} Add a drink</button>
+      <a class="btn" id="editDay" href="#/water/log${isToday ? '' : '/' + key}">${list.length ? `All ${list.length} drink${list.length === 1 ? '' : 's'} ›` : 'Edit ›'}</a>
+    </div>`;
+  $('addDayDrink').onclick = () => openAddDrinkSheet(key);
   return { update: () => mountDay(view, key), destroy() {} };
 }
 

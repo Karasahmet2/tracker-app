@@ -7,7 +7,7 @@
 //   #/notes, #/notes/YYYY-MM-DD           Notes (jump to a day)
 //   #/calendar/notes/month/YYYY-MM-DD     Notes calendar
 // =========================================================
-import { load, onChange, state } from './state.js';
+import { load, onChange, state, setSetting } from './state.js';
 import { $, dayKey, handleBack, isSheetOpen, showToast } from './ui.js';
 import { mountToday, mountLog } from './water.js';
 import { mountCalendar } from './calendar.js';
@@ -16,6 +16,8 @@ import { mountRunCalendar } from './runcal.js';
 import { mountNotes } from './notes.js';
 import { mountNotesCalendar } from './notescal.js';
 import { applyTheme } from './themes.js';
+import { askPersist, checkPersisted, backupDue, hasAnyData } from './safety.js';
+import { openBackup } from './settings.js';
 
 const routes = {
   '/water': { tab: 'water', mount: mountToday },
@@ -77,6 +79,10 @@ function stampDepth() {
 }
 
 async function start() {
+  // a copy of the app from before Update 7 is still open and holding the data
+  window.addEventListener('tracker:blocked', () => {
+    $('view').innerHTML = `<div class="soon"><h1>Close the other copy</h1><p>Another copy of this app is still open (in Chrome or as the installed app). Close it from your recent apps, and this one will open. Your data is safe.</p></div>`;
+  });
   try {
     await load();
   } catch (e) {
@@ -106,6 +112,20 @@ async function start() {
 
   show();
   registerServiceWorker();
+
+  // Update 7: protect the data from automatic clean-up, and nudge about backups
+  if (!(await checkPersisted())) askPersist();
+  setTimeout(() => {
+    // never cover another message (like "Added 330 ml · Undo"); tests switch these off
+    if ($('toastSlot').innerHTML || sessionStorage.getItem('trackerQuiet') === '1') return;
+    if (!hasAnyData() && !state.settings.welcomeSeen) {
+      showToast('Starting fresh? If you had data before, restore a backup.', { action: { label: 'Restore', fn: openBackup }, ms: 9000 });
+      setSetting('welcomeSeen', true);
+    } else if (backupDue() && sessionStorage.getItem('backupNag') !== '1') {
+      sessionStorage.setItem('backupNag', '1');
+      showToast('Time for a backup — it keeps your data safe outside Chrome.', { action: { label: 'Back up', fn: openBackup }, ms: 8000 });
+    }
+  }, 1200);
 }
 
 // Offline + updates: when a new version is installed the app refreshes itself once.

@@ -7,7 +7,8 @@ import {
   $, esc, icons, pad, hhmm, minutesOf, dayKey, fmtMl, fmtL, longDate,
   openSheet, closeSheet, showToast, showBanner, goBack
 } from './ui.js';
-import { openSettings } from './settings.js';
+import { openSettings, openBackup } from './settings.js';
+import { backupDue } from './safety.js';
 
 // The 24-hour line is as tall as the screen allows, so twigs are placed in % of it.
 const pctOfDay = (ts) => (minutesOf(ts) / 1440 * 100).toFixed(2) + '%';
@@ -29,6 +30,7 @@ export function mountToday(view) {
     <header class="head">
       <div><div class="date" id="dateLabel"></div><h1>Water</h1></div>
       <div class="head-right">
+        <button class="icon-btn backup-btn" id="backupBtn" aria-label="Back up your data">${icons.backup}<i class="due-dot hidden" id="backupDot"></i></button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">${icons.sliders}</button>
       </div>
     </header>
@@ -71,6 +73,7 @@ export function mountToday(view) {
     <a class="log-link" href="#/water/log" id="logLink"><b>Today's log</b><span id="logSummary"></span></a>`;
 
   $('settingsBtn').onclick = openSettings;
+  $('backupBtn').onclick = openBackup;
   $('customBtn').onclick = openCustom;
   $('cupGrid').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-ml]');
@@ -92,6 +95,9 @@ function update() {
   const bonus = Math.max(0, total - goal);
 
   $('dateLabel').textContent = longDate();
+  const due = backupDue();
+  $('backupDot').classList.toggle('hidden', !due);
+  $('backupBtn').setAttribute('aria-label', due ? 'Back up your data (a backup is due)' : 'Back up your data');
 
   $('bigFill').style.height = (Math.min(total, goal) / goal * 100).toFixed(1) + '%';
   $('bigWrap').classList.toggle('full', reached);
@@ -348,7 +354,7 @@ export function mountLog(view, params = []) {
     <p class="foot-note">Tap a drink to change it. ${isToday ? 'The day resets at midnight. ' : 'Changes here only affect this day. '}Deleted drinks stay in Settings → Trash for 30 days.</p>`;
 
   $('logBack').onclick = (e) => { e.preventDefault(); goBack(isToday ? '/water' : '/calendar/day/' + key); };
-  $('addPast').onclick = () => openDrinkSheet(key);
+  $('addPast').onclick = () => openAddDrinkSheet(key);
   $('entries').addEventListener('click', async (ev) => {
     const del = ev.target.closest('[data-del]');
     if (del) {
@@ -439,6 +445,89 @@ function openDrinkSheet(key, drink = null) {
         const d = await deleteDrink(drink.id);
         if (d) showToast(`Deleted ${fmtMl(d.ml)} · ${hhmm(d.ts)}`, { undo: () => restoreDrink(d.id) });
       };
+    }
+  });
+}
+
+// =========================================================
+// Update 7: add a drink to any day (today or earlier).
+// Cups like the Today page, "Other amount…", quick times or an exact
+// time, and a preview of the day's new total before adding.
+// =========================================================
+const QUICK_TIMES = [['Morning', '09:00'], ['Noon', '12:00'], ['Afternoon', '15:00'], ['Evening', '19:00']];
+
+export function openAddDrinkSheet(key) {
+  const today = dayKey(Date.now());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key || '') || key > today) key = today;
+  const isToday = key === today;
+  const now = new Date();
+  const nowStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const minsOf = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const notYet = (t) => isToday && minsOf(t) > now.getHours() * 60 + now.getMinutes();
+  const cups = state.settings.cups;
+  let ml = cups.includes(500) ? 500 : cups[Math.min(2, cups.length - 1)];
+  let time = isToday ? nowStr : '15:00';
+  const dayName = keyDate(key).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  openSheet(`
+    <div class="sheet-head"><div><h2>Add a drink</h2><span class="sheet-sub" id="addDayName">${isToday ? 'Today · ' : ''}${esc(dayName)}</span></div><button class="icon-btn" data-close aria-label="Close">${icons.close}</button></div>
+    <div class="group"><span>How much</span>
+      <div class="cup-grid sheet-cups" id="addCups">${cups.map((c) => `<button class="cup" data-add-ml="${c}" aria-pressed="false">${icons.cup(cupIconSize(c))}<span>${fmtMl(c)}</span></button>`).join('')}</div>
+      <button class="custom-btn" id="otherAmt" aria-expanded="false">Other amount…</button>
+      <div class="stepper hidden" id="otherBox">
+        <button id="minus" aria-label="Decrease by 50 ml">−50</button>
+        <div class="mid"><label for="amt">Amount</label><div class="val"><input id="amt" type="number" inputmode="numeric" min="10" max="5000" step="10" value="${ml}"><span class="unit">ml</span></div></div>
+        <button id="plus" aria-label="Increase by 50 ml">+50</button>
+      </div>
+    </div>
+    <div class="group"><div class="when-head"><span>When</span>
+        <label class="exact">Exact time <input id="timeIn" type="time" value="${time}"></label></div>
+      <div class="time-chips" id="timeChips">${QUICK_TIMES.map(([n, t]) => `<button data-time="${t}" aria-pressed="false" ${notYet(t) ? 'disabled' : ''}><b>${n}</b><span>${t}</span></button>`).join('')}</div>
+    </div>
+    <div class="day-preview" id="dayPreview"></div>
+    <button class="btn primary" id="addIt"></button>`, {
+    label: 'Add a drink to ' + dayName,
+    onMount: (sheet) => {
+      const amt = $('amt');
+      const otherOpen = () => !$('otherBox').classList.contains('hidden');
+      const sync = () => {
+        sheet.querySelectorAll('[data-add-ml]').forEach((b) => {
+          const on = !otherOpen() && Number(b.dataset.addMl) === ml;
+          b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+        });
+        sheet.querySelectorAll('[data-time]').forEach((b) => {
+          const on = b.dataset.time === time; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+        });
+        $('timeIn').value = time;
+        const { goal } = goalFor(key);
+        const before = drinksOn(key).reduce((s, d) => s + d.ml, 0);
+        const after = before + ml;
+        $('dayPreview').innerHTML = `<span>${isToday ? 'Today' : 'That day'} after this</span><b>${fmtL(after)} L${after > goal ? ` · <span class="x">+${fmtL(after - goal)} L extra</span>` : ` · ${Math.round(after / goal * 100)}%`}</b>`;
+        $('addIt').textContent = `Add ${fmtMl(ml)} at ${time}`;
+      };
+      sheet.querySelectorAll('[data-add-ml]').forEach((b) => {
+        b.onclick = () => { ml = Number(b.dataset.addMl); $('otherBox').classList.add('hidden'); $('otherAmt').setAttribute('aria-expanded', false); sync(); };
+      });
+      const val = () => Math.max(10, Math.min(5000, Math.round(Number(amt.value) || 0)));
+      $('otherAmt').onclick = () => {
+        const open = $('otherBox').classList.toggle('hidden') === false;
+        $('otherAmt').setAttribute('aria-expanded', open);
+        if (open) { amt.value = ml; amt.focus(); amt.select(); }
+        sync();
+      };
+      amt.oninput = () => { ml = val(); sync(); };
+      $('minus').onclick = () => { amt.value = ml = Math.max(10, val() - 50); sync(); };
+      $('plus').onclick = () => { amt.value = ml = Math.min(5000, val() + 50); sync(); };
+      sheet.querySelectorAll('[data-time]').forEach((b) => { b.onclick = () => { time = b.dataset.time; sync(); }; });
+      $('timeIn').onchange = () => { if ($('timeIn').value) time = $('timeIn').value; sync(); };
+      $('addIt').onclick = async () => {
+        const ts = tsFor(key, time);
+        if (ts > Date.now()) { showToast("That time hasn't happened yet"); return; }
+        closeSheet();
+        const d = await addDrink(ml, ts);
+        showToast(`Added ${fmtMl(ml)} at ${time}${isToday ? '' : ' · ' + keyDate(key).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`, { undo: () => undoAdd(d.id) });
+      };
+      sync();
     }
   });
 }

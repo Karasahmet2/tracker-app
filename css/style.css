@@ -427,7 +427,7 @@ button:disabled{cursor:default}
 .habit-switch a{height:32px;padding:0 12px;border-radius:9px;color:var(--text-2);display:flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none}
 .habit-switch a.on{background:var(--water);color:var(--ink);font-weight:700}
 .habit-switch a.on.run{background:var(--run);color:var(--run-ink)}
-.rgrid{grid-template-columns:repeat(7,minmax(0,1fr)) 1.1fr;gap:8px 4px}
+.rgrid{grid-template-columns:repeat(8,minmax(0,1fr));gap:8px 4px}
 .rfill{position:absolute;left:0;right:0;bottom:0;background:var(--run);animation:calRise 700ms cubic-bezier(.3,.7,.3,1) both}
 .rkm{position:absolute;left:5px;bottom:3px;font-size:10px;font-weight:800;color:var(--run-ink)}
 .rcell:not(.deep) .rkm{color:var(--text)}
@@ -508,6 +508,42 @@ button:disabled{cursor:default}
 .day-notes-head h2{margin:0;font-size:14px;font-weight:700}
 .day-notes-head a{font-size:13px;font-weight:600;color:var(--note)}
 .day-notes{padding:0 20px}
+
+/* ---------- Update 7: add a drink to any day, week rings, data safety ---------- */
+.day-actions{margin:14px 20px 18px;display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.day-actions .btn{height:48px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;text-decoration:none;color:var(--text)}
+.day-actions .btn.primary{color:var(--ink)}
+.sheet-sub{display:block;margin-top:2px;font-size:13px;font-weight:600;color:var(--water-light)}
+.sheet-cups{gap:8px}
+.sheet-cups .cup{height:76px;background:var(--surface-2);border:1px solid var(--line-2)}
+.sheet-cups .cup.on{background:var(--tint);border:2px solid var(--water)}
+.when-head{display:flex;justify-content:space-between;align-items:center}
+.when-head > span{font-size:13px;color:var(--muted);font-weight:600}
+.exact{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.exact input{height:36px;padding:0 8px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);font-weight:600}
+.time-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.time-chips button{height:46px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line-2);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.time-chips button b{font-size:13px}
+.time-chips button span{font-size:11px;color:var(--muted)}
+.time-chips button.on{background:var(--tint);border-color:var(--water)}
+.time-chips button.on span{color:var(--text)}
+.time-chips button:disabled{opacity:.35}
+.day-preview{display:flex;justify-content:space-between;gap:8px;padding:12px 14px;border-radius:14px;background:var(--deep);font-size:13px;color:var(--text-2)}
+.day-preview b{color:var(--text)}
+.wring .ring{animation:ringDraw .9s ease-out both}
+@keyframes ringDraw{from{stroke-dasharray:0 100}}
+.wring.water .ring{stroke:var(--water)}
+.wring.water .ring.bonus{stroke:var(--bonus)}
+.wring.not-yet{opacity:.35}
+.wring span{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.wring span small{font-size:8px;font-weight:700;color:var(--muted)}
+.legend .ring-i.water{border-color:var(--water)}
+.backup-btn{position:relative}
+.due-dot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 2px var(--surface)}
+.safety{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:16px;background:var(--deep)}
+.safety-row{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.safety-row .ok{color:var(--water-light);font-weight:700}
+.safety .hint{margin:0}
 
 /* shorter screens (most phones with the browser bars showing) */
 @media (max-height:780px){

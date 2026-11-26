@@ -23,7 +23,7 @@ module.exports = async () => {
     eq(await full.locator('.mextra').evaluate((el) => parseFloat(el.style.height)), 82, 'extra layer is 820 of 1000');
     assert(await full.evaluate((el) => el.classList.contains('full')), 'marked full');
     const numBox = await full.locator('.mnum').boundingBox(), cellBox = await full.boundingBox();
-    assert(numBox.x > cellBox.x + cellBox.width / 2, 'date sits in the top-right');
+    assert(numBox.x + numBox.width > cellBox.x + cellBox.width * 0.7 && numBox.y < cellBox.y + cellBox.height / 2, 'date sits in the top-right');
 
     assert(await page.locator('[data-day="2026-11-22"].today').count() === 1, 'today outlined');
     assert(await page.locator('span.mcell.future[data-day="2026-11-23"]').count() === 1, 'future days are not links');

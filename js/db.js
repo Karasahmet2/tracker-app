@@ -49,7 +49,17 @@ export function open() {
   dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (ev) => migrate(req.result, ev.oldVersion);
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const db = req.result;
+      // Update 7: if a newer version of the app opens (another tab, or the
+      // installed app next to a Chrome tab), step aside so it can upgrade,
+      // then reload into the new version. Nothing is lost.
+      db.onversionchange = () => { db.close(); dbPromise = null; location.reload(); };
+      resolve(db);
+    };
+    // An older copy is still holding the data; it will step aside on its own
+    // (above). Very old copies don't know how, so tell the user what to do.
+    req.onblocked = () => window.dispatchEvent(new CustomEvent('tracker:blocked'));
     req.onerror = () => reject(req.error);
   });
   return dbPromise;

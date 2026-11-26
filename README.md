@@ -35,7 +35,8 @@ you upload is exactly what runs on the phone.
 | Notes calendar | `js/notescal.js` | Month only, a stripe per note; tap a day for its notes; `#/calendar/notes/month/2026-11-20` |
 | Calendar | `js/calendar.js` | Month, Week and Day views, Day/Week/Month switch, pinch to zoom; addresses like `#/calendar/week/2026-11-17` |
 | Settings | `js/settings.js` | Goal, bonus size, "ask before adding", cup buttons, Trash, Backup |
-| Backup | `js/backup.js` | Save all data to a file and load it back |
+| Backup | `js/backup.js` | Save all data to a file (share sheet → Drive/Files, or download) and load it back |
+| Data safety | `js/safety.js` | Persistent storage request, weekly backup reminder, restore offer on an empty start |
 | Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, runs, notes, trash, settings |
 | Version | `js/version.js` | Shown in Settings; must match `sw.js` |
 | Look | `css/style.css` | All styles, grouped by part |
@@ -80,6 +81,17 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 `node_modules/` to GitHub (the included `.gitignore` leaves it out).
 
 ## Updates
+
+### Update 7 · tracker-v7 — Past days, week totals, data safety
+- **Add a drink to any day:** Calendar → a day → **Add a drink**. The same cup buttons as Today plus **Other amount…**, quick times (Morning 09:00, Noon 12:00, Afternoon 15:00, Evening 19:00) or an exact time, and a preview of the day's new total before adding. The button says exactly what it will do ("Add 500 ml at 15:00"). Times that haven't happened yet are greyed out for today. The log page's "Add a drink" uses the same sheet. **All N drinks ›** opens the day's list to edit or delete.
+- **Week totals in the water month:** a WEEK column with a ring per week. It fills toward the week's goal so far (each day's goal × the days that have happened), the inner light ring shows extra, and the middle shows the week's litres. Tap a ring to open that week.
+- **Data safety** (after data was lost when Chrome's site data was cleared):
+  - The app asks Chrome for **persistent storage**, so Chrome won't clear it on its own when space is low. Settings shows "Protected from clean-up: On", or a **Turn on** button.
+  - Settings explains that every app at the same address (here `karasahmet2.github.io`) shares one storage: clearing Chrome data for one clears them all.
+  - A **backup button** on the Today page gets an amber dot when the last backup is over a week old, and the app reminds you once. On the phone, **Save backup file** opens the share sheet so it can go straight to Google Drive or Files.
+  - If the app opens with no data at all, it offers to **restore a backup**.
+  - A newer version of the app no longer gets stuck behind an older open copy: the old copy steps aside and reloads.
+- Tests: t05, t12, t14, t15 adjusted; new t27 (add to a past day), t28 (week rings), t29 (data safety and two open copies). Tests switch off the start-up reminders except in t29.
 
 ### Update 6 · tracker-v6 — Notes
 - **Notes tab** (the bottom bar now has Water · Running · Notes · Calendar). Notes use yellow, like a sticky note.
@@ -133,5 +145,6 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 - Tests t01–t11.
 
 ## Next
+- Update 8: sync with Supabase (Google sign-in), designed around the data as it is now.
 - Pin a note to a run or a day; privacy settings for notes.
 - Ideas: "how it felt" on runs; Stats across water and running.

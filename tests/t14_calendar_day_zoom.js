@@ -44,7 +44,7 @@ module.exports = async () => {
     await page.goto(url + '#/calendar/day/2030-01-01');
     await page.waitForSelector('#dayTotal');
     eq(await text(page, '#periodLabel'), 'Sun 22 Nov', 'falls back to today');
-    assert(await page.locator('.log-link[href="#/water/log"]').count() === 1, 'today links to the log');
+    assert(await page.locator('#editDay[href="#/water/log"]').count() === 1, 'today links to the log');
     eq(errors.length, 0, 'no errors: ' + errors.join(' | '));
   } finally { await close(); }
 };

@@ -23,7 +23,7 @@ function startServer() {
 }
 
 // A Redmi-sized phone. Fonts from Google are blocked so tests don't need the internet.
-async function openApp({ time } = {}) {
+async function openApp({ time, quietOff = false } = {}) {
   const { server, url } = await startServer();
   const browser = await chromium.launch();
   const context = await browser.newContext({
@@ -36,6 +36,8 @@ async function openApp({ time } = {}) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/fonts|ERR_FAILED/.test(m.text())) errors.push(m.text()); });
   if (time) await page.clock.setFixedTime(new Date(time));
+  // keep the app's start-up reminders (backup, restore) out of the way of the tests
+  if (!quietOff) await context.addInitScript(() => { try { sessionStorage.setItem('trackerQuiet', '1'); } catch (e) {} });
   await page.goto(url);
   await page.waitForSelector('#cupGrid .cup');
   const close = async () => { await browser.close(); server.close(); };

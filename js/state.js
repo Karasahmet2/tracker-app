@@ -17,7 +17,9 @@ export const DEFAULTS = {
   runGoal: 15,                   // km per week (Monday–Sunday)
   runBonus: 5,                   // km on the bonus lap
   runGoalLog: null,              // [{ from: 'YYYY-MM-DD' (a Monday), goal, bonus }]
-  noteColor: 'yellow'            // colour the next quick note starts with
+  noteColor: 'yellow',           // colour the next quick note starts with
+  lastBackup: 0,                 // when a backup file was last saved (Update 7)
+  backupSnooze: 0                // "remind me later" until this time
 };
 
 export const state = {

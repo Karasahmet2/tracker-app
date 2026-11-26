@@ -5,12 +5,20 @@ import * as db from './db.js';
 
 export const BACKUP_KIND = 'tracker-backup';
 
-export async function saveBackup() {
+export async function saveBackup({ useShare = false } = {}) {
   const data = await db.exportAll();
   const file = { kind: BACKUP_KIND, version: 1, savedAt: new Date().toISOString(), ...data };
   const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
   const d = new Date();
   const name = `tracker-backup-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+  // Update 7: on the phone, offer the share sheet so it can go straight to Google Drive or Files.
+  if (useShare) {
+    const f = new File([blob], name, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) {
+      try { await navigator.share({ files: [f], title: 'Tracker backup' }); await db.setSetting('lastBackup', Date.now()); return name; }
+      catch (e) { if (e && e.name === 'AbortError') return null; }          // closed the share sheet: not saved
+    }
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name;
@@ -18,6 +26,7 @@ export async function saveBackup() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  await db.setSetting('lastBackup', Date.now());
   return name;
 }
 

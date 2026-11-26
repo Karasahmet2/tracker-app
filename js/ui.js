@@ -26,6 +26,7 @@ export const icons = {
   treadmill: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M5 19 19 12"/><path d="M15 8h3l2 4"/></svg>`,
   slope: `<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="3" stroke-linecap="round"><path d="M3 18 L21 8"/></svg>`,
   note: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8 12h8M8 16h5"/></svg>`,
+  backup: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>`,
   plus: `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
   close: `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
   back: `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
@@ -131,10 +132,11 @@ function enablePullDown(sheet) {
 // Toast (with optional Undo) and banner
 // =========================================================
 let toastTimer = null;
-export function showToast(text, { undo, ms = 4500 } = {}) {
+export function showToast(text, { undo, action, ms = 4500 } = {}) {
   clearTimeout(toastTimer);
-  $('toastSlot').innerHTML = `<div class="toast" role="status"><span>${esc(text)}</span>${undo ? '<button type="button" data-undo>Undo</button>' : ''}</div>`;
-  if (undo) $('toastSlot').querySelector('[data-undo]').onclick = () => { hideToast(); undo(); };
+  const btn = undo ? 'Undo' : action ? action.label : '';
+  $('toastSlot').innerHTML = `<div class="toast" role="status"><span>${esc(text)}</span>${btn ? `<button type="button" data-undo>${esc(btn)}</button>` : ''}</div>`;
+  if (btn) $('toastSlot').querySelector('[data-undo]').onclick = () => { hideToast(); (undo || action.fn)(); };
   toastTimer = setTimeout(hideToast, ms);
 }
 export function hideToast() { clearTimeout(toastTimer); $('toastSlot').innerHTML = ''; }
