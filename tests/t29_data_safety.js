@@ -16,13 +16,15 @@ module.exports = async () => {
     await page.locator('.toast', { hasText: 'Time for a backup' }).waitFor();
     // saving clears it
     await page.locator('#backupBtn').click();
-    const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('#saveBk').click()]);
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('#sheetSaveBk').click()]);
     assert((await dl.suggestedFilename()).startsWith('tracker-backup-2026-11-20'), 'file saved');
     await page.waitForSelector('#backupDot.hidden', { state: 'attached' });
-    await page.goBack();
+    await page.waitForSelector('.overlay', { state: 'detached' });
     await page.getByRole('button', { name: 'Settings' }).click();
-    assert((await text(page, '#openBackup')).includes('Last: Today'), 'settings shows the last backup');
-    assert((await text(page, '#safetyBox')).includes('127.0.0.1'), 'explains where the data lives');
+    await page.waitForSelector('#setData');
+    assert((await text(page, '#lastBackup')).includes('Today'), 'settings shows the last backup');
+    assert(await page.locator('.backup-card.due').count() === 0, 'not due');
+    assert((await text(page, '#setData')).includes('127.0.0.1'), 'explains where the data lives');
     await page.locator('#persistState').filter({ hasNotText: 'Checking' }).waitFor();
     // a week later the dot comes back
     await page.goBack();

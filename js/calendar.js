@@ -42,12 +42,13 @@ export function shell(view, key, { label, right, prevKey, nextKey, habit = 'wate
   return `
     <header class="head">
       <div><div class="date">${HABIT_NAME[habit]}</div><h1>Calendar</h1></div>
-      <div class="habit-switch" role="tablist" aria-label="Habit">
+      <a class="icon-btn" href="#/settings" aria-label="Settings">${icons.sliders}</a>
+    </header>
+    <div class="habit-switch" role="tablist" aria-label="Habit">
         <a href="${href(view, key, 'water')}" role="tab" aria-selected="${habit === 'water'}" class="${habit === 'water' ? 'on' : ''}" data-habit="water">Water</a>
         <a href="${href(view, key, 'run')}" role="tab" aria-selected="${habit === 'run'}" class="${habit === 'run' ? 'on run' : ''}" data-habit="run">Running</a>
         <a href="${href(view, key, 'notes')}" role="tab" aria-selected="${habit === 'notes'}" class="${habit === 'notes' ? 'on notes' : ''}" data-habit="notes">Notes</a>
-      </div>
-    </header>
+    </div>
     <div class="zoom ${habit} ${habit === 'notes' ? 'hidden' : ''}" role="tablist" aria-label="Zoom">
       ${tabs.map((v) => `<a href="${h(v, key)}" role="tab" aria-selected="${v === view}" class="${v === view ? 'on' : ''}" data-zoom="${v}">${v[0].toUpperCase() + v.slice(1)}</a>`).join('')}
     </div>

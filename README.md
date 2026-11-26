@@ -34,7 +34,7 @@ you upload is exactly what runs on the phone.
 | Notes | `js/notes.js` | Quick notes: write box, colours, search, colour filter, edit / delete |
 | Notes calendar | `js/notescal.js` | Month only, a stripe per note; tap a day for its notes; `#/calendar/notes/month/2026-11-20` |
 | Calendar | `js/calendar.js` | Month, Week and Day views, Day/Week/Month switch, pinch to zoom; addresses like `#/calendar/week/2026-11-17` |
-| Settings | `js/settings.js` | Goal, bonus size, "ask before adding", cup buttons, Trash, Backup |
+| Settings | `js/settings.js` | The Settings page (#/settings) in boxes: Your data, General, Water, Running, Notes, About; Trash and Backup sheets |
 | Backup | `js/backup.js` | Save all data to a file (share sheet → Drive/Files, or download) and load it back |
 | Data safety | `js/safety.js` | Persistent storage request, weekly backup reminder, restore offer on an empty start |
 | Saved data | `js/db.js` | The phone's built-in database (IndexedDB): drinks, runs, notes, trash, settings |
@@ -81,6 +81,19 @@ The `tests/`, `package.json` and `node_modules/` folders don't affect the app. D
 `node_modules/` to GitHub (the included `.gitignore` leaves it out).
 
 ## Updates
+
+### Update 8 · tracker-v8 — Settings page, pinned tabs
+- **The bottom tabs stay put.** They're pinned to the bottom of the screen; long pages (like a day with long notes in the calendar) scroll behind them instead of pushing them down.
+- **Settings is its own page**, opened from the gear at the top of every tab (Water, Running, Notes, Calendar), and divided into boxes:
+  - **Your data** — a Back up now card (Save to Drive / Files, Load a backup; it turns amber when a backup is overdue), Protected from clean-up, Trash, and where the data lives.
+  - **General** — theme, and the **start page** the app opens on.
+  - **Water** — daily goal, bonus bottle, "Ask before adding a cup" (now an on/off switch), and cup buttons — you can **add** a cup here now, not only remove one.
+  - **Running** — weekly goal and bonus lap.
+  - **Notes** — the colour new notes start with.
+  - **About** — the version.
+- The backup button stays on the Water page as a shortcut.
+- The calendar's Water / Running / Notes switch moved to its own row under the title, to make room for the gear.
+- Tests: t05, t09, t10, t17, t29 adjusted for the Settings page; new t30 (settings page, start page, new cup, pinned tabs).
 
 ### Update 7 · tracker-v7 — Past days, week totals, data safety
 - **Add a drink to any day:** Calendar → a day → **Add a drink**. The same cup buttons as Today plus **Other amount…**, quick times (Morning 09:00, Noon 12:00, Afternoon 15:00, Evening 19:00) or an exact time, and a preview of the day's new total before adding. The button says exactly what it will do ("Add 500 ml at 15:00"). Times that haven't happened yet are greyed out for today. The log page's "Add a drink" uses the same sheet. **All N drinks ›** opens the day's list to edit or delete.

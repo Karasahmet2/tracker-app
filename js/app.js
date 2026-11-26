@@ -17,7 +17,7 @@ import { mountNotes } from './notes.js';
 import { mountNotesCalendar } from './notescal.js';
 import { applyTheme } from './themes.js';
 import { askPersist, checkPersisted, backupDue, hasAnyData } from './safety.js';
-import { openBackup } from './settings.js';
+import { openBackup, mountSettings } from './settings.js';
 
 const routes = {
   '/water': { tab: 'water', mount: mountToday },
@@ -26,7 +26,8 @@ const routes = {
   '/calendar': { tab: 'calendar', mount: mountCalendar },     // takes /view/date after it
   '/calendar/run': { tab: 'calendar', mount: mountRunCalendar, habit: 'run' },
   '/notes': { tab: 'notes', mount: mountNotes },
-  '/calendar/notes': { tab: 'calendar', mount: mountNotesCalendar, habit: 'notes' }
+  '/calendar/notes': { tab: 'calendar', mount: mountNotesCalendar, habit: 'notes' },
+  '/settings': { tab: null, mount: mountSettings }
 };
 
 let page = null;
@@ -91,7 +92,9 @@ async function start() {
   }
   applyTheme(state.settings.theme);
   onChange(() => { if ((document.documentElement.dataset.theme || 'midnight') !== state.settings.theme) applyTheme(state.settings.theme); });
-  if (!location.hash) history.replaceState({ depth: 0 }, '', '#/water');
+  // Update 8: open on the start page chosen in Settings
+  const START = { water: '#/water', running: '#/running', notes: '#/notes', calendar: '#/calendar' };
+  if (!location.hash) history.replaceState({ depth: 0 }, '', START[state.settings.startPage] || '#/water');
   else if (!history.state) history.replaceState({ depth: 0 }, '');
   sessionStorage.setItem('depth', String(history.state.depth));
 

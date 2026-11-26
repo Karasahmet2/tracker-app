@@ -28,7 +28,10 @@ module.exports = async () => {
     eq(await page.locator('[data-restore]').count(), 1, 'only the deleted drink is in Trash');
     assert((await text(page, '#trashList')).includes('30 days left'), 'kept 30 days');
     await page.locator('[data-restore]').click();
-    await page.waitForFunction(() => document.getElementById('totalNum').textContent === '0.53');
+    await page.locator('#trashList .empty').waitFor();
+    await page.goBack();                                   // close the Trash sheet
+    await page.goBack();                                   // leave Settings
+    await page.waitForFunction(() => document.getElementById('totalNum')?.textContent === '0.53');
     eq(errors.length, 0, 'no errors: ' + errors.join(' | '));
   } finally { await close(); }
 };

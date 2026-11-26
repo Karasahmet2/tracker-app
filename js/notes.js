@@ -52,7 +52,7 @@ export function mountNotes(view, params = []) {
   view.innerHTML = `
     <header class="head">
       <div><div class="date">${esc(longDate())}</div><h1>Notes</h1></div>
-      <div class="head-right"><button class="icon-btn ${query ? 'on' : ''}" id="searchBtn" aria-label="Search notes" aria-expanded="${!!query}">
+      <div class="head-right"><button class="icon-btn" id="notesSettings" aria-label="Settings">${icons.sliders}</button><button class="icon-btn ${query ? 'on' : ''}" id="searchBtn" aria-label="Search notes" aria-expanded="${!!query}">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--text-2)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button></div>
     </header>
     <div class="search-row ${query ? '' : 'hidden'}" id="searchRow">
@@ -71,6 +71,7 @@ export function mountNotes(view, params = []) {
     <div class="note-filters" id="noteFilters"></div>
     <div class="note-list" id="noteList"></div>`;
 
+  $('notesSettings').onclick = () => { location.hash = '#/settings'; };
   const quickIn = $('quickIn');
   const grow = () => { quickIn.style.height = 'auto'; quickIn.style.height = Math.min(quickIn.scrollHeight, 180) + 'px'; };
   quickIn.oninput = () => { draft = quickIn.value; grow(); };

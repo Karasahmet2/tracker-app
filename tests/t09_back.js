@@ -3,13 +3,17 @@ const { openApp, text, eq, assert } = require('./helpers');
 module.exports = async () => {
   const { page, errors, close } = await openApp();
   try {
+    // Update 8: Settings is a page; the back gesture closes its Trash sheet first, then leaves Settings
     await page.getByRole('button', { name: 'Settings' }).click();
-    await page.getByRole('dialog', { name: 'Settings' }).waitFor();
-    await page.locator('#openTrash').click();              // a sheet opened from a sheet
+    await page.waitForSelector('#setData');
+    await page.locator('#openTrash').click();
     await page.getByRole('dialog', { name: 'Trash' }).waitFor();
     await page.goBack();
     await page.waitForSelector('.overlay', { state: 'detached' });
-    assert(page.url().endsWith('#/water'), 'still on Today');
+    assert(page.url().endsWith('#/settings'), 'still on Settings');
+    await page.goBack();
+    await page.waitForSelector('#bigWrap');
+    assert(page.url().endsWith('#/water'), 'back on Today');
 
     await page.locator('#logLink').click();
     await page.waitForSelector('#entries');

@@ -7,6 +7,7 @@ module.exports = async () => {
     const water = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--water').trim());
     eq(await bg(), 'rgb(10, 16, 32)', 'Midnight by default');
     await page.getByRole('button', { name: 'Settings' }).click();
+    await page.waitForSelector('#themePick');
     eq(await page.locator('[data-theme-pick]').count(), 4, 'four themes');
     await page.getByRole('button', { name: 'Daylight theme' }).click();
     eq(await bg(), 'rgb(243, 246, 250)', 'Daylight is light');
